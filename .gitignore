@@ -1,0 +1,5 @@
+bin/
+tmp/
+internal/packed/
+.env
+.DS_Store

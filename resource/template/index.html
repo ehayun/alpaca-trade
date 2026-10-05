@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="he" dir="rtl" data-bs-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>מניות ומסחר · Alpaca</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.rtl.min.css" integrity="sha384-CfCrinSRH2IR6a4e6fy2q6ioOX7O6Mtm1L9vRvFZ1trBncWmMePhzvafv7oIcWiW" crossorigin="anonymous">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;700&display=swap">
+  <link rel="stylesheet" href="/css/app.css">
+  <script>
+    // Follow the OS light/dark setting.
+    if (matchMedia('(prefers-color-scheme: dark)').matches) document.documentElement.dataset.bsTheme = 'dark';
+  </script>
+</head>
+<body class="bg-body-tertiary">
+<nav class="navbar bg-body border-bottom mb-4">
+  <div class="container">
+    <span class="navbar-brand fw-bold">מניות ומסחר</span>
+    <span class="badge text-bg-warning">חשבון דמו (<bdi>Paper</bdi>), לא כסף אמיתי</span>
+  </div>
+</nav>
+
+<main class="container pb-5">
+  <section class="card shadow-sm mb-4">
+    <div class="card-body">
+      <h1 class="h5 card-title mb-3">היסטוריית מחירים</h1>
+      <form id="bars-form" class="row g-3 align-items-end" novalidate>
+        <div class="col-6 col-md-3">
+          <label for="bars-symbol" class="form-label">סימול מניה</label>
+          <input id="bars-symbol" name="symbol" class="form-control" dir="ltr" placeholder="AAPL" maxlength="10" required autofocus>
+        </div>
+        <div class="col-6 col-md-3">
+          <label for="bars-days" class="form-label">מספר ימים</label>
+          <input id="bars-days" name="days" type="number" class="form-control" dir="ltr" min="1" max="3650" value="30" required>
+        </div>
+        <div class="col-12 col-md-auto">
+          <button type="submit" class="btn btn-primary w-100">הצג גרף</button>
+        </div>
+        <div class="col-12 col-md-auto ms-md-auto">
+          <div class="btn-group w-100" role="group" aria-label="סוג גרף">
+            <input type="radio" class="btn-check" name="chart-type" id="chart-candles" value="candles" checked>
+            <label class="btn btn-outline-secondary" for="chart-candles">נרות</label>
+            <input type="radio" class="btn-check" name="chart-type" id="chart-bars" value="bars">
+            <label class="btn btn-outline-secondary" for="chart-bars">ברים</label>
+            <input type="radio" class="btn-check" name="chart-type" id="chart-line" value="line">
+            <label class="btn btn-outline-secondary" for="chart-line">קו</label>
+          </div>
+        </div>
+      </form>
+      <div id="bars-msg" class="alert d-none mt-3" role="alert"></div>
+      <h2 id="chart-title" class="h6 text-body-secondary mt-4 mb-2"></h2>
+      <div id="chart" class="chart-box" dir="ltr"></div>
+    </div>
+  </section>
+
+  <div class="d-flex align-items-center mb-3">
+    <h2 class="h5 mb-0">מסחר</h2>
+    <button id="refresh-btn" type="button" class="btn btn-sm btn-outline-secondary ms-auto">רענון</button>
+  </div>
+  <div id="trade-msg" class="alert d-none" role="alert"></div>
+
+  <div class="row g-4">
+    <div class="col-lg-4">
+      <section class="card shadow-sm mb-4">
+        <div class="card-body">
+          <h3 class="h6 card-title">החשבון שלי</h3>
+          <dl class="row mb-0">
+            <dt class="col-6 fw-normal text-body-secondary">שווי תיק</dt><dd class="col-6 text-end"><bdi id="acc-equity">-</bdi></dd>
+            <dt class="col-6 fw-normal text-body-secondary">מזומן</dt><dd class="col-6 text-end"><bdi id="acc-cash">-</bdi></dd>
+            <dt class="col-6 fw-normal text-body-secondary">כוח קנייה</dt><dd class="col-6 text-end mb-0"><bdi id="acc-buying">-</bdi></dd>
+          </dl>
+        </div>
+      </section>
+
+      <section class="card shadow-sm">
+        <div class="card-body">
+          <h3 class="h6 card-title">פקודה חדשה</h3>
+          <form id="order-form" class="row g-3" novalidate>
+            <div class="col-6">
+              <label for="order-symbol" class="form-label">סימול</label>
+              <input id="order-symbol" name="symbol" class="form-control" dir="ltr" placeholder="AAPL" maxlength="10" required>
+            </div>
+            <div class="col-6">
+              <label for="order-side" class="form-label">כיוון</label>
+              <select id="order-side" name="side" class="form-select">
+                <option value="buy">קנייה</option>
+                <option value="sell">מכירה</option>
+              </select>
+            </div>
+            <div class="col-6">
+              <label for="order-type" class="form-label">סוג</label>
+              <select id="order-type" name="type" class="form-select">
+                <option value="market">שוק</option>
+                <option value="limit">לימיט</option>
+              </select>
+            </div>
+            <div class="col-6">
+              <label for="order-qty" class="form-label">כמות</label>
+              <input id="order-qty" name="qty" type="number" class="form-control" dir="ltr" min="0" step="any" required>
+            </div>
+            <div id="limit-group" class="col-12 d-none">
+              <label for="order-limit" class="form-label">מחיר לימיט (<bdi>$</bdi>)</label>
+              <input id="order-limit" name="limitPrice" type="number" class="form-control" dir="ltr" min="0" step="0.01">
+            </div>
+            <div class="col-12">
+              <div class="form-text mb-2">הפקודה תקפה עד סוף יום המסחר.</div>
+              <button type="submit" class="btn btn-success w-100">שלח פקודה</button>
+            </div>
+          </form>
+          <div id="order-msg" class="alert d-none mt-3 mb-0" role="alert"></div>
+        </div>
+      </section>
+    </div>
+
+    <div class="col-lg-8">
+      <section class="card shadow-sm mb-4">
+        <div class="card-body">
+          <h3 class="h6 card-title">פוזיציות פתוחות</h3>
+          <div class="table-responsive">
+            <table class="table table-sm align-middle mb-0">
+              <thead><tr><th>סימול</th><th>כמות</th><th>מחיר כניסה</th><th>מחיר נוכחי</th><th>שווי</th><th>רווח/הפסד</th></tr></thead>
+              <tbody id="positions-body"></tbody>
+            </table>
+          </div>
+          <p id="positions-empty" class="text-body-secondary mb-0 mt-2 d-none">אין פוזיציות פתוחות.</p>
+        </div>
+      </section>
+
+      <section class="card shadow-sm">
+        <div class="card-body">
+          <h3 class="h6 card-title">פקודות פתוחות</h3>
+          <div class="table-responsive">
+            <table class="table table-sm align-middle mb-0">
+              <thead><tr><th>נשלחה</th><th>סימול</th><th>כיוון</th><th>סוג</th><th>כמות</th><th>מחיר לימיט</th><th>סטטוס</th><th></th></tr></thead>
+              <tbody id="orders-body"></tbody>
+            </table>
+          </div>
+          <p id="orders-empty" class="text-body-secondary mb-0 mt-2 d-none">אין פקודות פתוחות.</p>
+        </div>
+      </section>
+    </div>
+  </div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/lightweight-charts@5.2.1/dist/lightweight-charts.standalone.production.js" integrity="sha384-KkYqTZlM13Zya6fVUF3IGCBOQ1ehFeJVVgxaVvD/0MebineF9EI8Jkd3NnWNChqN" crossorigin="anonymous"></script>
+<script type="module" src="/js/chart.js"></script>
+<script type="module" src="/js/trade.js"></script>
+</body>
+</html>

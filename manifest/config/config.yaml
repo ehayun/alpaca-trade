@@ -1,0 +1,17 @@
+# https://goframe.org/docs/web/server-config-file
+server:
+  address:    ":8000"
+  serverRoot: "resource/public"
+
+# https://goframe.org/docs/core/glog-config
+logger:
+  level:  "all"
+  stdout: true
+
+# https://goframe.org/docs/core/gview-config
+viewer:
+  paths:      ["resource/template"]
+  autoEncode: true # html/template escaping; off by default in GoFrame
+
+# Alpaca keys are NOT stored here. They come from the environment:
+# APCA_API_KEY_ID, APCA_API_SECRET_KEY (see .env.example).

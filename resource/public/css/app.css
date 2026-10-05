@@ -1,0 +1,11 @@
+:root {
+  --bs-font-sans-serif: "Heebo", system-ui, -apple-system, "Segoe UI", Arial, sans-serif;
+}
+
+.chart-box {
+  height: 420px;
+}
+
+@media (max-width: 576px) {
+  .chart-box { height: 300px; }
+}
