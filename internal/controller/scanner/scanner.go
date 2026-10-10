@@ -20,7 +20,7 @@ func (c *ControllerV1) Start(ctx context.Context, req *v1.StartReq) (res *v1.Sta
 		limit = DefaultMaxSpreadPct(ctx)
 	}
 	s := scanner.Start(scanner.Options{
-		MaxSpreadPct: limit, StochRule: req.Stoch, PriceClose: req.PriceClose, ResultFile: resultFile(ctx),
+		MaxSpreadPct: limit, PriceClose: req.PriceClose, ResultFile: resultFile(ctx),
 	})
 	return &s, nil
 }

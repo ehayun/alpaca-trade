@@ -1,6 +1,7 @@
 package market
 
 import (
+	"math"
 	"reflect"
 	"testing"
 	"time"
@@ -79,35 +80,40 @@ func TestEMA(t *testing.T) {
 	}
 }
 
-func TestStochastic(t *testing.T) {
-	c := func(day string, high, low, close float64) model.Candle {
-		return model.Candle{Time: day, High: high, Low: low, Close: close}
+func TestMACD(t *testing.T) {
+	closes := func(vals ...float64) []model.Candle {
+		out := make([]model.Candle, len(vals))
+		for i, v := range vals {
+			out[i] = model.Candle{Time: string(rune('a' + i)), Close: v}
+		}
+		return out
 	}
-	all := []model.Candle{
-		c("d1", 10, 0, 5),   // range 0..10
-		c("d2", 10, 0, 10),  // raw (period 2): (10-0)/(10-0) = 100
-		c("d3", 10, 0, 0),   // raw 0
-		c("d4", 20, 10, 20), // range 0..20 -> raw 100
-		c("d5", 20, 20, 20), // range 10..20 -> raw 100
-		c("d6", 7, 7, 7),    // range 7..20 -> raw 0
+	// fast 2, slow 3, signal 2 on closes 1,2,3,4,5,9:
+	// EMA2 (k=2/3): b 1.5, c 2.5, d 3.5, e 4.5, f 7.5 · EMA3 (k=1/2): c 2, d 3, e 4, f 6.5
+	// MACD: c 0.5, d 0.5, e 0.5, f 1 · signal (k=2/3): d 0.5, e 0.5, f 0.8333 · hist: d 0, e 0, f 0.1667
+	line, sig, hist := MACD(closes(1, 2, 3, 4, 5, 9), 2, 3, 2)
+	near := func(got []model.Point, want ...float64) bool {
+		if len(got) != len(want) {
+			return false
+		}
+		for i := range want {
+			if math.Abs(got[i].Value-want[i]) > 1e-9 {
+				return false
+			}
+		}
+		return true
 	}
-	// period 2, smooth 1 => %K = raw; dPeriod 2 => %D = 2-day average of %K.
-	k, d := Stochastic(all, 2, 1, 2)
-	p := func(day string, v float64) model.Point { return model.Point{Time: day, Value: v} }
-	wantK := []model.Point{p("d2", 100), p("d3", 0), p("d4", 100), p("d5", 100), p("d6", 0)}
-	wantD := []model.Point{p("d3", 50), p("d4", 50), p("d5", 100), p("d6", 50)}
-	if !reflect.DeepEqual(k, wantK) || !reflect.DeepEqual(d, wantD) {
-		t.Fatalf("k = %v, d = %v", k, d)
+	if !near(line, 0.5, 0.5, 0.5, 1) || line[0].Time != "c" {
+		t.Fatalf("macd = %v", line)
 	}
-
-	// Flat range: raw %K is 50, not a division by zero.
-	flat := []model.Candle{c("a", 5, 5, 5), c("b", 5, 5, 5), c("c", 5, 5, 5)}
-	if k, _ := Stochastic(flat, 2, 2, 1); len(k) != 1 || k[0].Value != 50 {
-		t.Fatalf("flat: %v", k)
+	if !near(sig, 0.5, 0.5, 2.0/3+0.5/3) || sig[0].Time != "d" {
+		t.Fatalf("signal = %v", sig)
 	}
-
-	// Too few candles.
-	if k, d := Stochastic(all[:1], 2, 1, 1); k != nil || d != nil {
-		t.Fatalf("short: %v %v", k, d)
+	if !near(hist, 0, 0, 1-(2.0/3+0.5/3)) || hist[2].Time != "f" {
+		t.Fatalf("hist = %v", hist)
+	}
+	// Too few candles for the slow EMA.
+	if l, s, h := MACD(closes(1, 2), 2, 3, 2); l != nil || s != nil || h != nil {
+		t.Fatalf("short: %v %v %v", l, s, h)
 	}
 }

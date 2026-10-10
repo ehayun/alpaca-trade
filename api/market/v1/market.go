@@ -16,7 +16,7 @@ type BarsRes struct {
 	Symbol  string         `json:"symbol"`
 	Candles []model.Candle `json:"candles"`
 	EMAs    []model.EMA    `json:"emas"`
-	Stoch   model.Stoch    `json:"stoch"`
+	MACD    model.MACD     `json:"macd"`
 }
 
 type InfoReq struct {

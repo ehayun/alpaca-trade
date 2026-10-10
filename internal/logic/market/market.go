@@ -18,19 +18,19 @@ var newYork = mustLoad("America/New_York")
 // EMAPeriods are the moving averages drawn on the chart.
 var EMAPeriods = []int{20, 100, 200}
 
-// Slow stochastic settings: %K over 14 days, smoothed over 3; %D = 3-day average of %K.
+// MACD settings (the usual defaults): EMA 12 - EMA 26, signal = EMA 9 of the MACD line.
 const (
-	StochPeriod = 14
-	StochSmooth = 3
-	StochD      = 3
+	MACDFast   = 12
+	MACDSlow   = 26
+	MACDSignal = 9
 )
 
 // emaWarmupDays of extra history (~1030 trading days) let EMA 200 settle before the first shown day:
 // the starting value's weight drops to (1-2/201)^1030 ≈ 0.003%, so values match a full-history EMA.
 const emaWarmupDays = 1500
 
-// DailyCandles returns daily candles for the last `days` calendar days, with their EMAs and stochastic.
-func DailyCandles(ctx context.Context, symbol string, days int) ([]model.Candle, []model.EMA, model.Stoch, error) {
+// DailyCandles returns daily candles for the last `days` calendar days, with their EMAs and MACD.
+func DailyCandles(ctx context.Context, symbol string, days int) ([]model.Candle, []model.EMA, model.MACD, error) {
 	start, end := Range(time.Now(), days)
 	bars, err := client.GetBars(symbol, marketdata.GetBarsRequest{
 		TimeFrame:  marketdata.OneDay,
@@ -39,13 +39,13 @@ func DailyCandles(ctx context.Context, symbol string, days int) ([]model.Candle,
 		End:        end,
 	})
 	if err != nil {
-		return nil, nil, model.Stoch{}, err
+		return nil, nil, model.MACD{}, err
 	}
 	all := ToCandles(bars)
 	from := start.In(newYork).Format(time.DateOnly)
 	candles, emas := WithEMAs(all, from, EMAPeriods...)
-	sk, sd := Stochastic(all, StochPeriod, StochSmooth, StochD)
-	return candles, emas, model.Stoch{K: since(sk, from), D: since(sd, from)}, nil
+	line, signal, hist := MACD(all, MACDFast, MACDSlow, MACDSignal)
+	return candles, emas, model.MACD{MACD: since(line, from), Signal: since(signal, from), Hist: since(hist, from)}, nil
 }
 
 // DailyCandlesMulti returns daily candles for the last `days` calendar days for many symbols at once.
@@ -95,66 +95,53 @@ func since(pts []model.Point, from string) []model.Point {
 	return out
 }
 
-// Stochastic returns the slow stochastic of the candles:
-// raw %K = 100 * (close - lowest low) / (highest high - lowest low) over `period` days (50 when the range is 0),
-// %K = `smooth`-day average of raw %K, %D = `dPeriod`-day average of %K.
-func Stochastic(candles []model.Candle, period, smooth, dPeriod int) (k, d []model.Point) {
-	if period < 1 || len(candles) < period {
-		return nil, nil
-	}
-	raw := make([]model.Point, 0, len(candles)-period+1)
-	for i := period - 1; i < len(candles); i++ {
-		hi, lo := candles[i].High, candles[i].Low
-		for _, c := range candles[i-period+1 : i] {
-			hi, lo = max(hi, c.High), min(lo, c.Low)
-		}
-		v := 50.0
-		if hi > lo {
-			v = 100 * (candles[i].Close - lo) / (hi - lo)
-		}
-		raw = append(raw, model.Point{Time: candles[i].Time, Value: v})
-	}
-	k = sma(raw, smooth)
-	return k, sma(k, dPeriod)
-}
-
-// sma is the simple moving average of the point values; the first point is at index n-1.
-func sma(pts []model.Point, n int) []model.Point {
-	if n < 1 || len(pts) < n {
-		return nil
-	}
-	out := make([]model.Point, 0, len(pts)-n+1)
-	sum := 0.0
-	for i, p := range pts {
-		sum += p.Value
-		if i >= n {
-			sum -= pts[i-n].Value
-		}
-		if i >= n-1 {
-			out = append(out, model.Point{Time: p.Time, Value: sum / float64(n)})
-		}
-	}
-	return out
-}
-
 // EMA of the closes, seeded with the simple average of the first `period` closes.
 // It has no points when there are fewer than `period` candles.
 func EMA(candles []model.Candle, period int) []model.Point {
-	if period < 1 || len(candles) < period {
+	closes := make([]model.Point, len(candles))
+	for i, c := range candles {
+		closes[i] = model.Point{Time: c.Time, Value: c.Close}
+	}
+	return emaOf(closes, period)
+}
+
+// emaOf is the EMA of point values, seeded with the simple average of the first `period` values.
+func emaOf(pts []model.Point, period int) []model.Point {
+	if period < 1 || len(pts) < period {
 		return nil
 	}
 	sum := 0.0
-	for _, c := range candles[:period] {
-		sum += c.Close
+	for _, p := range pts[:period] {
+		sum += p.Value
 	}
 	ema := sum / float64(period)
 	k := 2 / float64(period+1)
-	out := []model.Point{{Time: candles[period-1].Time, Value: ema}}
-	for _, c := range candles[period:] {
-		ema = c.Close*k + ema*(1-k)
-		out = append(out, model.Point{Time: c.Time, Value: ema})
+	out := []model.Point{{Time: pts[period-1].Time, Value: ema}}
+	for _, p := range pts[period:] {
+		ema = p.Value*k + ema*(1-k)
+		out = append(out, model.Point{Time: p.Time, Value: ema})
 	}
 	return out
+}
+
+// MACD returns the MACD line (fast EMA - slow EMA, from the day the slow EMA starts),
+// the signal line (EMA of the MACD line) and the histogram (MACD - signal, from the day the signal starts).
+func MACD(candles []model.Candle, fast, slow, signal int) (line, sig, hist []model.Point) {
+	f, s := EMA(candles, fast), EMA(candles, slow)
+	if len(s) == 0 || len(f) < len(s) {
+		return nil, nil, nil
+	}
+	f = f[len(f)-len(s):] // both now end on the last candle and start on the slow EMA's first day
+	line = make([]model.Point, len(s))
+	for i := range s {
+		line[i] = model.Point{Time: s[i].Time, Value: f[i].Value - s[i].Value}
+	}
+	sig = emaOf(line, signal)
+	hist = make([]model.Point, len(sig))
+	for i, p := range sig {
+		hist[i] = model.Point{Time: p.Time, Value: line[len(line)-len(sig)+i].Value - p.Value}
+	}
+	return line, sig, hist
 }
 
 // Range ends 16 minutes before now: free plans can't query the latest 15 minutes of SIP data.

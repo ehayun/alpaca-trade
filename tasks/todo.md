@@ -53,4 +53,7 @@ Bootstrap 5.3.8 RTL, Heebo, Hebrew UI, `$` money, dates dd/MM/yyyy Asia/Jerusale
   Verified: AWK %K 19.15 / %D 14.97 equal in chart and scan; validation errors in Hebrew; screenshots.
 - [x] "Price close to the averages" checkbox (option A, chosen by the user): the close joins the 3 EMAs inside the
   same limit (PriceSpreadPct). Verified live at 2%: 40 matches without it, 13 with it (WRB out: EMAs 0.18%, close 3.47%).
+- [x] Stochastic removed (chart pane, scanner rules, %K column); MACD 12,26,9 shown in the chart pane only
+  (line, signal, histogram), not used by the scanner. Verified: app MACD equals an independent Python
+  calculation on 10 years of AAPL (diff 6e-14); screenshot. Tests ran on port 8099 (8000 was the user's server).
 - Note: the free plan snapshot uses the IEX feed, so "מחזור" is IEX volume, not full-market volume.

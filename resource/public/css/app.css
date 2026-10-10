@@ -3,7 +3,7 @@
 }
 
 .chart-box {
-  height: 560px; /* price pane + stochastic pane (140px) */
+  height: 560px; /* price pane + MACD pane (140px) */
 }
 
 @media (max-width: 576px) {

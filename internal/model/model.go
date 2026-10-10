@@ -29,10 +29,12 @@ type EMA struct {
 	Points []Point `json:"points"`
 }
 
-// Stoch is the slow stochastic: %K (raw %K smoothed) and %D (average of %K), aligned with the candles.
-type Stoch struct {
-	K []Point `json:"k"`
-	D []Point `json:"d"`
+// MACD is the MACD line (fast EMA - slow EMA of the close), its signal line (EMA of MACD)
+// and the histogram (MACD - signal), aligned with the candles.
+type MACD struct {
+	MACD   []Point `json:"macd"`
+	Signal []Point `json:"signal"`
+	Hist   []Point `json:"hist"`
 }
 
 // ScanMatch is one symbol's last close and EMAs; SpreadPct = (highest EMA - lowest EMA) / close * 100.
@@ -45,8 +47,6 @@ type ScanMatch struct {
 	EMA200         float64 `json:"ema200"`
 	SpreadPct      float64 `json:"spreadPct"`
 	PriceSpreadPct float64 `json:"priceSpreadPct"`
-	StochK         float64 `json:"stochK"`
-	StochD         float64 `json:"stochD"`
 }
 
 // Spread is the value a scan compares with its limit: with or without the close.
@@ -67,7 +67,6 @@ type ScanStatus struct {
 	Done         int         `json:"done"`    // symbols fetched so far
 	Scanned      int         `json:"scanned"` // symbols with enough history for EMA 200
 	MaxSpreadPct float64     `json:"maxSpreadPct"`
-	StochRule    string      `json:"stochRule"`  // "" (not used), oversold, overbought or bullcross
 	PriceClose   bool        `json:"priceClose"` // the close must also be inside the spread limit
 	Matches      []ScanMatch `json:"matches"`    // closest first
 }

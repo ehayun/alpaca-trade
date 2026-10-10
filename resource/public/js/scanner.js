@@ -1,4 +1,4 @@
-// EMA scanner side panel: choose the spread limit and an optional stochastic rule, start a scan,
+// EMA scanner side panel: choose the spread limit and whether the price must be close too, start a scan,
 // show progress, list the matches with live prices; a click loads the chart and info.
 // On open, a saved scan (if any) is offered instead of a new scan.
 import { api, showMessage, hideMessage, num, usd, dateTime } from './common.js';
@@ -11,21 +11,16 @@ const list = $('scan-list');
 const form = $('bars-form');
 const saved = $('scan-saved');
 const pctInput = $('scan-pct');
-const stochOn = $('scan-stoch-on');
-const stochRule = $('scan-stoch');
 const priceClose = $('scan-price-close');
 
-const STOCH_LABEL = { oversold: 'מכירת יתר', overbought: 'קניית יתר', bullcross: 'חציה עולה מתחת ל-20' };
 
 const POLL_MS = 2000;
 const stacked = matchMedia('(max-width: 991.98px)'); // Bootstrap lg breakpoint
 let shown = ''; // symbol on the chart, highlighted in the list
 
-// The settings a scan ran with, e.g. "עד 2% · סטוכסטי: מכירת יתר".
+// The settings a scan ran with, e.g. "עד 2% כולל המחיר".
 function settingsText(s) {
-  const stoch = s.stochRule ? ` · סטוכסטי: ${STOCH_LABEL[s.stochRule] ?? s.stochRule}` : '';
-  const price = s.priceClose ? ' כולל המחיר' : '';
-  return `עד ${num(s.maxSpreadPct)}%${price}${stoch}`;
+  return `עד ${num(s.maxSpreadPct)}%${s.priceClose ? ' כולל המחיר' : ''}`;
 }
 
 function statusText(s) {
@@ -60,7 +55,6 @@ function row(m, withPrice) {
   tr.append(
     td(m.symbol, 'fw-medium'),
     td(usd(m.close), 'text-end scan-price'), // close at scan time until the live price arrives
-    td(m.stochK === undefined ? '-' : m.stochK.toFixed(0), 'text-end'), // scans saved before the stochastic have no %K
     td(`${(withPrice ? m.priceSpreadPct : m.spreadPct).toFixed(2)}%`, 'text-end text-body-secondary'),
   );
   tr.addEventListener('click', () => openSymbol(m.symbol));
@@ -135,7 +129,6 @@ async function startScan() {
   btn.disabled = true;
   const body = {
     maxSpreadPct: Number(pctInput.value),
-    stoch: stochOn.checked ? stochRule.value : '',
     priceClose: priceClose.checked,
   };
   try {
@@ -147,9 +140,6 @@ async function startScan() {
 }
 
 btn.addEventListener('click', startScan);
-stochOn.addEventListener('change', () => {
-  stochRule.disabled = !stochOn.checked;
-});
 $('scan-saved-rescan').addEventListener('click', startScan);
 
 document.addEventListener('symbol-loaded', (e) => {

@@ -2,10 +2,10 @@
 
 Hebrew (RTL) web app for US stocks: daily price charts and **paper** trading through Alpaca.
 
-- Price history: enter a symbol and a number of days (1 to 3650); candlestick chart by default, with OHLC bars and line as alternatives. EMA 20, 100 and 200 of the close are drawn on every chart type; the server fetches ~4 years of extra history so the EMAs match a full-history calculation. A pane below the price shows the slow stochastic (14, 3, 3) with lines at 80 and 20.
+- Price history: enter a symbol and a number of days (1 to 3650); candlestick chart by default, with OHLC bars and line as alternatives. EMA 20, 100 and 200 of the close are drawn on every chart type; the server fetches ~4 years of extra history so the EMAs match a full-history calculation. A pane below the price shows MACD (12, 26, 9): MACD line, signal line and histogram.
 - Paper trading: account summary, market and limit day orders, open positions, open orders with cancel.
 - Info tab: company data, today's price and the 5 latest headlines for the charted symbol, plus an on-demand Hebrew news summary by Claude (`claude-opus-5-5`, cached 15 minutes per symbol).
-- EMA scanner (side panel): on demand, scans the S&P 500, Nasdaq-100 and Dow 30 (~518 symbols, ~1 minute) and lists the stocks whose EMA 20, 100 and 200 are within a spread limit of the last close (set in the panel per scan; the default comes from `scanner.maxSpreadPct`, 2%). Optionally, "price close to the averages" adds the last close as a fourth value inside the same limit, and "use stochastic" adds one rule: oversold (%K ≤ 20), overbought (%K ≥ 80), or bullish cross (in the last 3 days %K crossed above %D from 20 or less). Click a symbol to load its chart and info. Prices are split-adjusted. Each row shows the live price. The last successful scan is saved to `scanner.resultFile` (default `data/scan.json`, git-ignored); when the page opens and that file exists, it asks whether to use the saved scan (with its date) or scan again.
+- EMA scanner (side panel): on demand, scans the S&P 500, Nasdaq-100 and Dow 30 (~518 symbols, ~1 minute) and lists the stocks whose EMA 20, 100 and 200 are within a spread limit of the last close (set in the panel per scan; the default comes from `scanner.maxSpreadPct`, 2%). Optionally, "price close to the averages" adds the last close as a fourth value inside the same limit. Click a symbol to load its chart and info. Prices are split-adjusted. Each row shows the live price. The last successful scan is saved to `scanner.resultFile` (default `data/scan.json`, git-ignored); when the page opens and that file exists, it asks whether to use the saved scan (with its date) or scan again.
 - Shareable links: `/?symbol=AAPL&days=90&chart=bars` opens with that chart loaded (`chart` = candles, bars, line).
 
 **Trading always goes to `https://paper-api.alpaca.markets`.** The URL is hard-coded in
@@ -70,10 +70,10 @@ server-side, and the client only gets a generic Hebrew message.
 
 | Method | Path | |
 |---|---|---|
-| GET | `/api/bars?symbol=AAPL&days=30` | daily candles, EMA 20/100/200 and slow stochastic |
+| GET | `/api/bars?symbol=AAPL&days=30` | daily candles, EMA 20/100/200 and MACD |
 | GET | `/api/info?symbol=AAPL` | company, today's price, 5 latest headlines |
 | GET | `/api/news-summary?symbol=AAPL` | Hebrew news summary by Claude (paid API call, cached 15 min) |
-| POST | `/api/scan` | `{maxSpreadPct?, stoch?: oversold\|overbought\|bullcross, priceClose?}`; start a scan in the background (no-op while one runs) |
+| POST | `/api/scan` | `{maxSpreadPct?, priceClose?}`; start a scan in the background (no-op while one runs) |
 | GET | `/api/scan` | scan progress, or the last result (kept in memory) |
 | GET | `/api/scan/saved` | the scan saved in the result file, or `null` |
 | GET | `/api/prices?symbols=WRB,DASH` | latest price for up to 100 symbols |

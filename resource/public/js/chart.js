@@ -1,5 +1,5 @@
 // Price chart: daily candles (default), bars or close-price line, with EMA 20/100/200,
-// and the slow stochastic (14, 3, 3) in a pane below, from /api/bars.
+// and MACD (12, 26, 9) in a pane below, from /api/bars.
 import { api, showMessage, hideMessage } from './common.js';
 
 const LWC = window.LightweightCharts;
@@ -29,8 +29,8 @@ const chart = LWC.createChart(box, {
 let candles = [];
 let series = null; // the price series; the only one replaced on redraw
 
-const STOCH_PANE = 1;
-const STOCH_HEIGHT = 140; // px
+const MACD_PANE = 1;
+const MACD_HEIGHT = 140; // px
 
 // Color-blind safe (Okabe-Ito): blue up, orange down. Up candles are hollow as a non-color cue.
 const UP = '#0072B2';
@@ -42,11 +42,14 @@ const EMA_STYLE = {
   100: { color: '#009E73', lineStyle: LWC.LineStyle.Dashed },
   200: { color: dark ? '#dee2e6' : '#495057', lineStyle: LWC.LineStyle.Dotted },
 };
-// Stochastic: %K solid, %D dashed, in colors not used by the price pane.
-const STOCH_STYLE = {
-  k: { color: '#56B4E9', lineStyle: LWC.LineStyle.Solid, label: '%K (14, 3)' },
-  d: { color: '#D55E00', lineStyle: LWC.LineStyle.Dashed, label: '%D (3)' },
+// MACD: the MACD line solid, the signal line dashed, in colors not used by the price pane.
+const MACD_STYLE = {
+  macd: { color: '#56B4E9', lineStyle: LWC.LineStyle.Solid, label: 'MACD (12, 26)' },
+  signal: { color: '#D55E00', lineStyle: LWC.LineStyle.Dashed, label: 'Signal (9)' },
 };
+// Histogram bars: blue above 0, orange below (as the candles); the side of the 0 line also shows the sign.
+const HIST_UP = 'rgba(0, 114, 178, 0.55)';
+const HIST_DOWN = 'rgba(230, 159, 0, 0.65)';
 const CSS_DASH = { [LWC.LineStyle.Solid]: 'solid', [LWC.LineStyle.Dashed]: 'dashed', [LWC.LineStyle.Dotted]: 'dotted' };
 
 const legend = document.getElementById('chart-legend');
@@ -59,33 +62,32 @@ function legendItem(text, s) {
   legend.append(item);
 }
 for (const [period, s] of Object.entries(EMA_STYLE)) legendItem(`EMA ${period}`, s);
-for (const s of Object.values(STOCH_STYLE)) legendItem(s.label, s);
+for (const s of Object.values(MACD_STYLE)) legendItem(s.label, s);
 
 // Indicator lines are created once and only get new data. Lightweight Charts deletes a pane when its
-// last series is removed (the stochastic pane would then move up into the price pane), so the EMA
+// last series is removed (the MACD pane would then move up into the price pane), so the EMA
 // lines keep the price pane alive while the price series is swapped.
 const LINE = { lineWidth: 2, priceLineVisible: false, lastValueVisible: false, crosshairMarkerVisible: false };
 const emaSeries = Object.fromEntries(
   Object.entries(EMA_STYLE).map(([period, style]) => [period, chart.addSeries(LWC.LineSeries, { ...style, ...LINE })]),
 );
-// The stochastic pane always shows 0..100, with dotted lines at 80 (overbought) and 20 (oversold).
-const stochSeries = Object.fromEntries(['k', 'd'].map((key) => {
-  const { label, ...style } = STOCH_STYLE[key];
-  const opts = { ...style, ...LINE, autoscaleInfoProvider: () => ({ priceRange: { minValue: 0, maxValue: 100 } }) };
-  return [key, chart.addSeries(LWC.LineSeries, opts, STOCH_PANE)];
+// MACD pane: histogram first, so the two lines draw over the bars; a dotted line at 0.
+const histSeries = chart.addSeries(LWC.HistogramSeries, { priceLineVisible: false, lastValueVisible: false }, MACD_PANE);
+const macdSeries = Object.fromEntries(['macd', 'signal'].map((key) => {
+  const { label, ...style } = MACD_STYLE[key];
+  return [key, chart.addSeries(LWC.LineSeries, { ...style, ...LINE }, MACD_PANE)];
 }));
-for (const level of [80, 20]) {
-  stochSeries.k.createPriceLine({
-    price: level, color: dark ? '#6c757d' : '#adb5bd', lineWidth: 1, lineStyle: LWC.LineStyle.Dotted, axisLabelVisible: true,
-  });
-}
-stochSeries.k.priceScale().applyOptions({ scaleMargins: { top: 0.08, bottom: 0.08 } }); // default top margin shows a "120" tick
-chart.panes()[STOCH_PANE].setHeight(STOCH_HEIGHT);
+macdSeries.macd.createPriceLine({
+  price: 0, color: dark ? '#6c757d' : '#adb5bd', lineWidth: 1, lineStyle: LWC.LineStyle.Dotted, axisLabelVisible: false,
+});
+macdSeries.macd.priceScale().applyOptions({ scaleMargins: { top: 0.1, bottom: 0.1 } });
+chart.panes()[MACD_PANE].setHeight(MACD_HEIGHT);
 
 function setIndicators(data) {
   for (const e of data.emas) emaSeries[e.period]?.setData(e.points);
-  stochSeries.k.setData(data.stoch.k);
-  stochSeries.d.setData(data.stoch.d);
+  macdSeries.macd.setData(data.macd.macd);
+  macdSeries.signal.setData(data.macd.signal);
+  histSeries.setData(data.macd.hist.map((p) => ({ ...p, color: p.value >= 0 ? HIST_UP : HIST_DOWN })));
 }
 
 function draw() {
