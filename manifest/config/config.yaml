@@ -14,7 +14,7 @@ viewer:
   autoEncode: true # html/template escaping; off by default in GoFrame
 
 scanner:
-  maxSpreadPct: 1 # list a symbol when (highest EMA - lowest EMA) / last close is at most this percent
+  maxSpreadPct: 2 # list a symbol when (highest EMA - lowest EMA) / last close is at most this percent
 
 # Alpaca keys are NOT stored here. They come from the environment:
 # APCA_API_KEY_ID, APCA_API_SECRET_KEY (see .env.example).

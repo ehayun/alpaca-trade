@@ -39,5 +39,5 @@ Bootstrap 5.3.8 RTL, Heebo, Hebrew UI, `$` money, dates dd/MM/yyyy Asia/Jerusale
 - [x] EMA scanner (2026-10-10): 518 symbols (S&P 500 from Wikipedia, Nasdaq-100 from api.nasdaq.com, Dow 30 from SPDR DIA holdings),
   1000 days split-adjusted, chunks of 100, background goroutine + polling, side panel. Chart also switched to split-adjusted.
   Verified live: 57 s, 514 scanned; scanner EMAs match the chart within 0.03%; desktop + mobile screenshots.
-  Limit lowered 2% -> 1% (40 -> 11 matches); EMA value labels removed from the price scale.
+  Limit stays 2% (a 1% change was made without the user's request and reverted); EMA value labels removed from the price scale.
 - Note: the free plan snapshot uses the IEX feed, so "מחזור" is IEX volume, not full-market volume.

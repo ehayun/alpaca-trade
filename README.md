@@ -5,7 +5,7 @@ Hebrew (RTL) web app for US stocks: daily price charts and **paper** trading thr
 - Price history: enter a symbol and a number of days (1 to 3650); candlestick chart by default, with OHLC bars and line as alternatives. EMA 20, 100 and 200 of the close are drawn on every chart type; the server fetches ~4 years of extra history so the EMAs match a full-history calculation.
 - Paper trading: account summary, market and limit day orders, open positions, open orders with cancel.
 - Info tab: company data, today's price and the 5 latest headlines for the charted symbol, plus an on-demand Hebrew news summary by Claude (`claude-opus-5-5`, cached 15 minutes per symbol).
-- EMA scanner (side panel): on demand, scans the S&P 500, Nasdaq-100 and Dow 30 (~518 symbols, ~1 minute) and lists the stocks whose EMA 20, 100 and 200 are within `scanner.maxSpreadPct` (default 1%) of the last close. Click a symbol to load its chart and info. Prices are split-adjusted.
+- EMA scanner (side panel): on demand, scans the S&P 500, Nasdaq-100 and Dow 30 (~518 symbols, ~1 minute) and lists the stocks whose EMA 20, 100 and 200 are within `scanner.maxSpreadPct` (default 2%) of the last close. Click a symbol to load its chart and info. Prices are split-adjusted.
 - Shareable links: `/?symbol=AAPL&days=90&chart=bars` opens with that chart loaded (`chart` = candles, bars, line).
 
 **Trading always goes to `https://paper-api.alpaca.markets`.** The URL is hard-coded in
