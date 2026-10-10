@@ -43,4 +43,6 @@ Bootstrap 5.3.8 RTL, Heebo, Hebrew UI, `$` money, dates dd/MM/yyyy Asia/Jerusale
 - [x] Scanner list: live price per row (GET /api/prices, one snapshot request); result saved to data/scan.json
   (temp file + rename); on page open the saved scan is offered with its date. Verified: scan → file → restart →
   question → "use" shows the list with live prices; invalid symbols list rejected (code 51).
+- [x] Scanner results as a table (symbol | price | spread, sticky header, keyboard-openable rows); panel 400px at ≥1400px
+  (width chosen by the user). Verified: price column lines up across rows at 2000 and 1400 px; row click loads the chart.
 - Note: the free plan snapshot uses the IEX feed, so "מחזור" is IEX volume, not full-market volume.

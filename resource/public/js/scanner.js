@@ -20,37 +20,48 @@ function statusText(s) {
   return `נסרקו ${num(s.scanned)} מניות · ${dateTime(s.finishedAt)} · נמצאו ${num(s.matches.length)} (עד ${num(s.maxSpreadPct)}%)`;
 }
 
-function item(m) {
-  const b = document.createElement('button');
-  b.type = 'button';
-  b.className = 'list-group-item list-group-item-action d-flex align-items-center gap-2';
-  b.dataset.symbol = m.symbol;
-  b.title = `EMA 20: ${m.ema20.toFixed(2)} · EMA 100: ${m.ema100.toFixed(2)} · EMA 200: ${m.ema200.toFixed(2)}`;
-  const sym = document.createElement('bdi');
-  sym.className = 'fw-medium';
-  sym.textContent = m.symbol;
-  const price = document.createElement('bdi');
-  price.className = 'small scan-price';
-  price.textContent = usd(m.close); // close at scan time until the live price arrives
-  const spread = document.createElement('bdi');
-  spread.className = 'small text-body-secondary ms-auto';
-  spread.textContent = `${m.spreadPct.toFixed(2)}%`;
-  b.append(sym, price, spread);
-  b.addEventListener('click', () => {
-    form.symbol.value = m.symbol;
-    form.requestSubmit();
-    // When the panel is stacked above the chart (narrow screens), bring the chart into view.
-    if (stacked.matches) form.scrollIntoView({ behavior: 'smooth' });
+function td(text, cls = '') {
+  const cell = document.createElement('td');
+  cell.className = cls;
+  const b = document.createElement('bdi');
+  b.textContent = text;
+  cell.append(b);
+  return cell;
+}
+
+function openSymbol(symbol) {
+  form.symbol.value = symbol;
+  form.requestSubmit();
+  // When the panel is stacked above the chart (narrow screens), bring the chart into view.
+  if (stacked.matches) form.scrollIntoView({ behavior: 'smooth' });
+}
+
+function row(m) {
+  const tr = document.createElement('tr');
+  tr.dataset.symbol = m.symbol;
+  tr.tabIndex = 0; // rows open with Enter or Space too
+  tr.title = `EMA 20: ${m.ema20.toFixed(2)} · EMA 100: ${m.ema100.toFixed(2)} · EMA 200: ${m.ema200.toFixed(2)}`;
+  tr.append(
+    td(m.symbol, 'fw-medium'),
+    td(usd(m.close), 'text-end scan-price'), // close at scan time until the live price arrives
+    td(`${m.spreadPct.toFixed(2)}%`, 'text-end text-body-secondary'),
+  );
+  tr.addEventListener('click', () => openSymbol(m.symbol));
+  tr.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      openSymbol(m.symbol);
+    }
   });
-  return b;
+  return tr;
 }
 
 function highlight() {
-  for (const b of list.children) {
-    const on = b.dataset.symbol === shown;
-    b.classList.toggle('active', on);
-    if (on) b.setAttribute('aria-current', 'true');
-    else b.removeAttribute('aria-current');
+  for (const tr of list.children) {
+    const on = tr.dataset.symbol === shown;
+    tr.classList.toggle('table-primary', on);
+    if (on) tr.setAttribute('aria-current', 'true');
+    else tr.removeAttribute('aria-current');
   }
 }
 
@@ -59,9 +70,9 @@ async function refreshPrices(matches) {
   if (!matches.length) return;
   try {
     const { prices } = await api(`/api/prices?symbols=${encodeURIComponent(matches.map((m) => m.symbol).join(','))}`);
-    for (const b of list.children) {
-      const p = prices[b.dataset.symbol];
-      if (p !== undefined) b.querySelector('.scan-price').textContent = usd(p);
+    for (const tr of list.children) {
+      const p = prices[tr.dataset.symbol];
+      if (p !== undefined) tr.querySelector('.scan-price bdi').textContent = usd(p);
     }
   } catch (err) {
     console.warn('live prices:', err.message);
@@ -74,7 +85,8 @@ function render(s) {
   if (s.failed) showMessage(msg, 'הסריקה נכשלה, נסו שוב');
   else hideMessage(msg);
   if (!s.running) {
-    list.replaceChildren(...s.matches.map(item));
+    list.replaceChildren(...s.matches.map(row));
+    $('scan-table').hidden = s.matches.length === 0;
     highlight();
     refreshPrices(s.matches);
   }

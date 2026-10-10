@@ -43,7 +43,14 @@
           </div>
         </div>
         <div id="scan-msg" class="alert d-none" role="alert"></div>
-        <div id="scan-list" class="list-group scan-list"></div>
+        <div id="scan-table" class="scan-list" hidden>
+          <table class="table table-sm table-hover align-middle mb-0">
+            <thead>
+              <tr><th scope="col">סימול</th><th scope="col" class="text-end">מחיר</th><th scope="col" class="text-end">פער</th></tr>
+            </thead>
+            <tbody id="scan-list"></tbody>
+          </table>
+        </div>
       </div>
     </section>
   </aside>

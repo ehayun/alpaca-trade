@@ -12,12 +12,15 @@
 
 /* Wide screens: the scanner panel keeps a fixed width and the chart takes the rest. */
 @media (min-width: 1400px) {
-  .scan-col { flex: 0 0 300px; width: 300px; }
+  .scan-col { flex: 0 0 400px; width: 400px; }
   .chart-col { flex: 1 1 0; width: auto; min-width: 0; }
 }
 
 /* Scanner results scroll inside the side panel. */
 .scan-list { max-height: 560px; overflow-y: auto; }
+.scan-list thead th { position: sticky; top: 0; z-index: 1; } /* header stays while the rows scroll */
+.scan-list tbody tr { cursor: pointer; }
+.scan-list td { font-variant-numeric: tabular-nums; } /* digits line up in the price and spread columns */
 @media (max-width: 991.98px) {
   .scan-list { max-height: 240px; } /* stacked above the chart: keep the chart in reach */
 }
