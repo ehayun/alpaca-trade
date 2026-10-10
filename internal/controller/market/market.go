@@ -55,3 +55,11 @@ func (c *ControllerV1) NewsSummary(ctx context.Context, req *v1.NewsSummaryReq) 
 	}
 	return &v1.NewsSummaryRes{Symbol: symbol, Summary: text}, nil
 }
+
+func (c *ControllerV1) Prices(ctx context.Context, req *v1.PricesReq) (res *v1.PricesRes, err error) {
+	prices, err := market.LatestPrices(ctx, strings.Split(strings.ToUpper(req.Symbols), ","))
+	if err != nil {
+		return nil, gerror.Wrap(err, "latest prices")
+	}
+	return &v1.PricesRes{Prices: prices}, nil
+}

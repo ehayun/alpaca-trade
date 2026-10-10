@@ -34,3 +34,12 @@ type NewsSummaryRes struct {
 	Symbol  string `json:"symbol"`
 	Summary string `json:"summary"`
 }
+
+type PricesReq struct {
+	g.Meta  `path:"/prices" method:"get" tags:"Market" summary:"Latest price for up to 100 symbols"`
+	Symbols string `json:"symbols" v:"required|regex:^[A-Za-z.]{1,10}(,[A-Za-z.]{1,10}){0,99}$#יש להזין סימולים|רשימת הסימולים לא תקינה"`
+}
+
+type PricesRes struct {
+	Prices map[string]float64 `json:"prices"`
+}

@@ -24,7 +24,7 @@
 
 <main class="container-fluid px-lg-4 pb-5">
   <div class="row g-4 mb-4">
-  <aside class="col-lg-3">
+  <aside class="col-lg-3 scan-col">
     <section class="card shadow-sm h-100">
       <div class="card-body d-flex flex-column">
         <div class="d-flex align-items-center mb-2">
@@ -35,12 +35,19 @@
           מניות מ-<bdi>S&amp;P 500</bdi>, <bdi>Nasdaq-100</bdi> ו-<bdi>Dow 30</bdi> שבהן <bdi>EMA 20</bdi>, <bdi>100</bdi> ו-<bdi>200</bdi> קרובים זה לזה.
         </p>
         <div id="scan-status" class="small text-body-secondary mb-2" aria-live="polite">עדיין לא נסרק.</div>
+        <div id="scan-saved" class="alert alert-info small" hidden>
+          <p id="scan-saved-text" class="mb-2"></p>
+          <div class="d-flex flex-wrap gap-2">
+            <button id="scan-saved-use" type="button" class="btn btn-sm btn-primary">השתמש בסריקה השמורה</button>
+            <button id="scan-saved-rescan" type="button" class="btn btn-sm btn-outline-primary">סרוק מחדש</button>
+          </div>
+        </div>
         <div id="scan-msg" class="alert d-none" role="alert"></div>
         <div id="scan-list" class="list-group scan-list"></div>
       </div>
     </section>
   </aside>
-  <div class="col-lg-9">
+  <div class="col-lg-9 chart-col">
   <section class="card shadow-sm h-100">
     <div class="card-body">
       <h1 class="h5 card-title mb-3">היסטוריית מחירים</h1>

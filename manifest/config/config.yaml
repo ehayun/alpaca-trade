@@ -14,6 +14,7 @@ viewer:
   autoEncode: true # html/template escaping; off by default in GoFrame
 
 scanner:
+  resultFile: "data/scan.json" # the last successful scan; the page offers it instead of a new scan
   maxSpreadPct: 2 # list a symbol when (highest EMA - lowest EMA) / last close is at most this percent
 
 # Alpaca keys are NOT stored here. They come from the environment:

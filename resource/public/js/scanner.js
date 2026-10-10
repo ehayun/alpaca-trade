@@ -1,5 +1,6 @@
-// EMA scanner side panel: start a scan, show progress, list the matches; a click loads the chart and info.
-import { api, showMessage, hideMessage, num, dateTime } from './common.js';
+// EMA scanner side panel: start a scan, show progress, list the matches with live prices;
+// a click loads the chart and info. On open, a saved scan (if any) is offered instead of a new scan.
+import { api, showMessage, hideMessage, num, usd, dateTime } from './common.js';
 
 const $ = (id) => document.getElementById(id);
 const btn = $('scan-btn');
@@ -7,6 +8,7 @@ const statusEl = $('scan-status');
 const msg = $('scan-msg');
 const list = $('scan-list');
 const form = $('bars-form');
+const saved = $('scan-saved');
 
 const POLL_MS = 2000;
 const stacked = matchMedia('(max-width: 991.98px)'); // Bootstrap lg breakpoint
@@ -21,16 +23,19 @@ function statusText(s) {
 function item(m) {
   const b = document.createElement('button');
   b.type = 'button';
-  b.className = 'list-group-item list-group-item-action d-flex align-items-center';
+  b.className = 'list-group-item list-group-item-action d-flex align-items-center gap-2';
   b.dataset.symbol = m.symbol;
   b.title = `EMA 20: ${m.ema20.toFixed(2)} · EMA 100: ${m.ema100.toFixed(2)} · EMA 200: ${m.ema200.toFixed(2)}`;
   const sym = document.createElement('bdi');
   sym.className = 'fw-medium';
   sym.textContent = m.symbol;
+  const price = document.createElement('bdi');
+  price.className = 'small scan-price';
+  price.textContent = usd(m.close); // close at scan time until the live price arrives
   const spread = document.createElement('bdi');
   spread.className = 'small text-body-secondary ms-auto';
   spread.textContent = `${m.spreadPct.toFixed(2)}%`;
-  b.append(sym, spread);
+  b.append(sym, price, spread);
   b.addEventListener('click', () => {
     form.symbol.value = m.symbol;
     form.requestSubmit();
@@ -49,6 +54,20 @@ function highlight() {
   }
 }
 
+// Live prices for the listed symbols, in one request. On failure the scan-time close stays.
+async function refreshPrices(matches) {
+  if (!matches.length) return;
+  try {
+    const { prices } = await api(`/api/prices?symbols=${encodeURIComponent(matches.map((m) => m.symbol).join(','))}`);
+    for (const b of list.children) {
+      const p = prices[b.dataset.symbol];
+      if (p !== undefined) b.querySelector('.scan-price').textContent = usd(p);
+    }
+  } catch (err) {
+    console.warn('live prices:', err.message);
+  }
+}
+
 function render(s) {
   btn.disabled = s.running;
   statusEl.textContent = statusText(s);
@@ -57,6 +76,7 @@ function render(s) {
   if (!s.running) {
     list.replaceChildren(...s.matches.map(item));
     highlight();
+    refreshPrices(s.matches);
   }
 }
 
@@ -76,7 +96,8 @@ async function follow(s) {
   }
 }
 
-btn.addEventListener('click', async () => {
+async function startScan() {
+  saved.hidden = true;
   btn.disabled = true;
   try {
     follow(await api('/api/scan', { method: 'POST' }));
@@ -84,12 +105,30 @@ btn.addEventListener('click', async () => {
     showMessage(msg, err.message);
     btn.disabled = false;
   }
-});
+}
+
+btn.addEventListener('click', startScan);
+$('scan-saved-rescan').addEventListener('click', startScan);
 
 document.addEventListener('symbol-loaded', (e) => {
   shown = e.detail;
   highlight();
 });
 
-// Show the last result (or a scan in progress) when the page opens.
-api('/api/scan').then(follow, (err) => showMessage(msg, err.message));
+// On open: follow a running scan; otherwise offer the saved scan, if there is one.
+async function init() {
+  const s = await api('/api/scan');
+  if (s.running) return follow(s);
+  const last = await api('/api/scan/saved');
+  if (!last) return render(s);
+  $('scan-saved-text').textContent =
+    `נמצאה סריקה שמורה מ-${dateTime(last.finishedAt)} (${num(last.matches.length)} מניות, עד ${num(last.maxSpreadPct)}%).`;
+  $('scan-saved-use').onclick = () => {
+    saved.hidden = true;
+    render(last);
+  };
+  statusEl.textContent = '';
+  saved.hidden = false;
+}
+
+init().catch((err) => showMessage(msg, err.message));

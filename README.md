@@ -5,7 +5,7 @@ Hebrew (RTL) web app for US stocks: daily price charts and **paper** trading thr
 - Price history: enter a symbol and a number of days (1 to 3650); candlestick chart by default, with OHLC bars and line as alternatives. EMA 20, 100 and 200 of the close are drawn on every chart type; the server fetches ~4 years of extra history so the EMAs match a full-history calculation.
 - Paper trading: account summary, market and limit day orders, open positions, open orders with cancel.
 - Info tab: company data, today's price and the 5 latest headlines for the charted symbol, plus an on-demand Hebrew news summary by Claude (`claude-opus-5-5`, cached 15 minutes per symbol).
-- EMA scanner (side panel): on demand, scans the S&P 500, Nasdaq-100 and Dow 30 (~518 symbols, ~1 minute) and lists the stocks whose EMA 20, 100 and 200 are within `scanner.maxSpreadPct` (default 2%) of the last close. Click a symbol to load its chart and info. Prices are split-adjusted.
+- EMA scanner (side panel): on demand, scans the S&P 500, Nasdaq-100 and Dow 30 (~518 symbols, ~1 minute) and lists the stocks whose EMA 20, 100 and 200 are within `scanner.maxSpreadPct` (default 2%) of the last close. Click a symbol to load its chart and info. Prices are split-adjusted. Each row shows the live price. The last successful scan is saved to `scanner.resultFile` (default `data/scan.json`, git-ignored); when the page opens and that file exists, it asks whether to use the saved scan (with its date) or scan again.
 - Shareable links: `/?symbol=AAPL&days=90&chart=bars` opens with that chart loaded (`chart` = candles, bars, line).
 
 **Trading always goes to `https://paper-api.alpaca.markets`.** The URL is hard-coded in
@@ -75,6 +75,8 @@ server-side, and the client only gets a generic Hebrew message.
 | GET | `/api/news-summary?symbol=AAPL` | Hebrew news summary by Claude (paid API call, cached 15 min) |
 | POST | `/api/scan` | start an EMA scan in the background (no-op while one runs) |
 | GET | `/api/scan` | scan progress, or the last result (kept in memory) |
+| GET | `/api/scan/saved` | the scan saved in the result file, or `null` |
+| GET | `/api/prices?symbols=WRB,DASH` | latest price for up to 100 symbols |
 | GET | `/api/account` | equity, cash, buying power |
 | GET | `/api/positions` | open positions |
 | GET | `/api/orders` | open orders |

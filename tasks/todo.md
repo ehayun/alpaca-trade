@@ -40,4 +40,7 @@ Bootstrap 5.3.8 RTL, Heebo, Hebrew UI, `$` money, dates dd/MM/yyyy Asia/Jerusale
   1000 days split-adjusted, chunks of 100, background goroutine + polling, side panel. Chart also switched to split-adjusted.
   Verified live: 57 s, 514 scanned; scanner EMAs match the chart within 0.03%; desktop + mobile screenshots.
   Limit stays 2% (a 1% change was made without the user's request and reverted); EMA value labels removed from the price scale.
+- [x] Scanner list: live price per row (GET /api/prices, one snapshot request); result saved to data/scan.json
+  (temp file + rename); on page open the saved scan is offered with its date. Verified: scan → file → restart →
+  question → "use" shows the list with live prices; invalid symbols list rejected (code 51).
 - Note: the free plan snapshot uses the IEX feed, so "מחזור" is IEX volume, not full-market volume.

@@ -17,3 +17,9 @@ type StatusReq struct {
 }
 
 type StatusRes = model.ScanStatus
+
+type SavedReq struct {
+	g.Meta `path:"/scan/saved" method:"get" tags:"Scanner" summary:"The scan saved in the result file; null if there is none"`
+}
+
+type SavedRes = model.ScanStatus

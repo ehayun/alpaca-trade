@@ -130,6 +130,21 @@ func Quote(ctx context.Context, symbol string) (model.Quote, error) {
 	return ToQuote(s), nil
 }
 
+// LatestPrices returns the latest price per symbol in one request; symbols without data are missing.
+func LatestPrices(ctx context.Context, symbols []string) (map[string]float64, error) {
+	snaps, err := client.GetSnapshots(symbols, marketdata.GetSnapshotRequest{})
+	if err != nil {
+		return nil, err
+	}
+	out := make(map[string]float64, len(snaps))
+	for s, snap := range snaps {
+		if p := ToQuote(snap).Price; p != nil {
+			out[s] = *p
+		}
+	}
+	return out, nil
+}
+
 // ToQuote takes the latest trade as the price (daily close if none) and compares it to the previous close.
 func ToQuote(s *marketdata.Snapshot) model.Quote {
 	var q model.Quote

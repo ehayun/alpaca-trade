@@ -5,6 +5,11 @@ import (
 	"bufio"
 	"context"
 	"embed"
+	"encoding/json"
+	"errors"
+	"io/fs"
+	"os"
+	"path/filepath"
 	"slices"
 	"strings"
 	"sync"
@@ -59,7 +64,8 @@ func Status() model.ScanStatus {
 }
 
 // Start begins a scan in the background and returns at once; if a scan is running, it changes nothing.
-func Start(maxSpreadPct float64) model.ScanStatus {
+// A successful result is also written to resultFile.
+func Start(maxSpreadPct float64, resultFile string) model.ScanStatus {
 	mu.Lock()
 	defer mu.Unlock()
 	if status.Running {
@@ -70,11 +76,11 @@ func Start(maxSpreadPct float64) model.ScanStatus {
 	status = model.ScanStatus{
 		Running: true, StartedAt: &now, Total: len(symbols), MaxSpreadPct: maxSpreadPct, Matches: []model.ScanMatch{},
 	}
-	go run(symbols, maxSpreadPct)
+	go run(symbols, maxSpreadPct, resultFile)
 	return status
 }
 
-func run(symbols []string, maxSpreadPct float64) {
+func run(symbols []string, maxSpreadPct float64, resultFile string) {
 	ctx := context.Background()
 	matches, scanned, failed := []model.ScanMatch{}, 0, false
 	defer func() {
@@ -89,6 +95,9 @@ func run(symbols []string, maxSpreadPct float64) {
 		status.Scanned = scanned
 		if !failed {
 			status.Matches = matches
+			if err := Save(resultFile, status); err != nil {
+				g.Log().Errorf(ctx, "save scan: %+v", err)
+			}
 		}
 	}()
 
@@ -123,6 +132,39 @@ func run(symbols []string, maxSpreadPct float64) {
 		}
 		return strings.Compare(a.Symbol, b.Symbol)
 	})
+}
+
+// Save writes a finished scan to path as JSON. It writes a temp file and renames it,
+// so a reader never sees half a file.
+func Save(path string, s model.ScanStatus) error {
+	data, err := json.MarshalIndent(s, "", "  ")
+	if err != nil {
+		return err
+	}
+	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
+		return err
+	}
+	tmp := path + ".tmp"
+	if err := os.WriteFile(tmp, data, 0o644); err != nil {
+		return err
+	}
+	return os.Rename(tmp, path)
+}
+
+// Load reads the scan saved at path; it returns nil, nil when there is no saved scan.
+func Load(path string) (*model.ScanStatus, error) {
+	data, err := os.ReadFile(path)
+	if errors.Is(err, fs.ErrNotExist) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	var s model.ScanStatus
+	if err := json.Unmarshal(data, &s); err != nil {
+		return nil, err
+	}
+	return &s, nil
 }
 
 // Evaluate computes the last EMAs and their spread; ok is false without enough history for EMA 200.

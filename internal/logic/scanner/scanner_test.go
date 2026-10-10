@@ -4,6 +4,7 @@ import (
 	"math"
 	"slices"
 	"testing"
+	"time"
 
 	"alpaca-app/internal/model"
 )
@@ -49,5 +50,22 @@ func TestSymbols(t *testing.T) {
 		if !slices.Contains(s, want) {
 			t.Fatalf("missing %s", want)
 		}
+	}
+}
+
+func TestSaveLoad(t *testing.T) {
+	path := t.TempDir() + "/sub/scan.json"
+	if s, err := Load(path); s != nil || err != nil {
+		t.Fatalf("no file: got %+v, %v; want nil, nil", s, err)
+	}
+	now := time.Date(2026, 10, 10, 5, 44, 0, 0, time.UTC)
+	in := model.ScanStatus{FinishedAt: &now, Total: 518, Scanned: 514, MaxSpreadPct: 2,
+		Matches: []model.ScanMatch{{Symbol: "WRB", Close: 71.91, SpreadPct: 0.18}}}
+	if err := Save(path, in); err != nil {
+		t.Fatal(err)
+	}
+	out, err := Load(path)
+	if err != nil || out == nil || !out.FinishedAt.Equal(now) || out.Scanned != 514 || len(out.Matches) != 1 || out.Matches[0] != in.Matches[0] {
+		t.Fatalf("got %+v, %v", out, err)
 	}
 }
