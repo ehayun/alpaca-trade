@@ -7,7 +7,10 @@ import (
 )
 
 type StartReq struct {
-	g.Meta `path:"/scan" method:"post" tags:"Scanner" summary:"Start an EMA scan of the S&P 500, Nasdaq-100 and Dow 30"`
+	g.Meta       `path:"/scan" method:"post" tags:"Scanner" summary:"Start an EMA scan of the S&P 500, Nasdaq-100 and Dow 30"`
+	MaxSpreadPct float64 `json:"maxSpreadPct" v:"between:0.1,20#הפער חייב להיות בין 0.1% ל-20%"` // 0 or missing = config default
+	Stoch        string  `json:"stoch" v:"in:oversold,overbought,bullcross#כלל סטוכסטי לא נתמך"` // "" = do not use
+	PriceClose   bool    `json:"priceClose"`                                                     // the close must also be inside the limit
 }
 
 type StartRes = model.ScanStatus

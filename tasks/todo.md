@@ -45,4 +45,12 @@ Bootstrap 5.3.8 RTL, Heebo, Hebrew UI, `$` money, dates dd/MM/yyyy Asia/Jerusale
   question → "use" shows the list with live prices; invalid symbols list rejected (code 51).
 - [x] Scanner results as a table (symbol | price | spread, sticky header, keyboard-openable rows); panel 400px at ≥1400px
   (width chosen by the user). Verified: price column lines up across rows at 2000 and 1400 px; row click loads the chart.
+- [x] Slow stochastic 14,3,3 (2026-10-10): server-side calc (test), own chart pane 0..100 with 80/20 lines;
+  scanner panel: spread % per scan (default from config) + optional stochastic rule (oversold / overbought /
+  bull cross ≤20 in 3 days, chosen in the panel; the user did not pick one rule). %K column in the table.
+  Bug found: LWC deletes a pane when its last series is removed, so the stochastic moved into the price pane;
+  fixed by creating indicator series once and swapping only the price series.
+  Verified: AWK %K 19.15 / %D 14.97 equal in chart and scan; validation errors in Hebrew; screenshots.
+- [x] "Price close to the averages" checkbox (option A, chosen by the user): the close joins the 3 EMAs inside the
+  same limit (PriceSpreadPct). Verified live at 2%: 40 matches without it, 13 with it (WRB out: EMAs 0.18%, close 3.47%).
 - Note: the free plan snapshot uses the IEX feed, so "מחזור" is IEX volume, not full-market volume.

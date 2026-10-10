@@ -34,6 +34,27 @@
         <p class="small text-body-secondary mb-2">
           מניות מ-<bdi>S&amp;P 500</bdi>, <bdi>Nasdaq-100</bdi> ו-<bdi>Dow 30</bdi> שבהן <bdi>EMA 20</bdi>, <bdi>100</bdi> ו-<bdi>200</bdi> קרובים זה לזה.
         </p>
+        <div class="row g-2 align-items-end mb-2">
+          <div class="col-5">
+            <label for="scan-pct" class="form-label small mb-1">פער מקסימלי (%)</label>
+            <input id="scan-pct" type="number" class="form-control form-control-sm" dir="ltr" min="0.1" max="20" step="0.1" value="{{.maxSpreadPct}}" required>
+          </div>
+          <div class="col-7">
+            <div class="form-check mb-1">
+              <input id="scan-stoch-on" class="form-check-input" type="checkbox">
+              <label for="scan-stoch-on" class="form-check-label small">השתמש בסטוכסטי</label>
+            </div>
+            <select id="scan-stoch" class="form-select form-select-sm" aria-label="כלל סטוכסטי" disabled>
+              <option value="oversold">מכירת יתר (&#x2066;%K ≤ 20&#x2069;)</option>
+              <option value="overbought">קניית יתר (&#x2066;%K ≥ 80&#x2069;)</option>
+              <option value="bullcross" title="ב-3 הימים האחרונים %K חצה כלפי מעלה את %D, מ-20 ומטה">חציה עולה מתחת ל-20</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-check mb-2">
+          <input id="scan-price-close" class="form-check-input" type="checkbox">
+          <label for="scan-price-close" class="form-check-label small">המחיר קרוב לממוצעים (באותו פער)</label>
+        </div>
         <div id="scan-status" class="small text-body-secondary mb-2" aria-live="polite">עדיין לא נסרק.</div>
         <div id="scan-saved" class="alert alert-info small" hidden>
           <p id="scan-saved-text" class="mb-2"></p>
@@ -46,7 +67,7 @@
         <div id="scan-table" class="scan-list" hidden>
           <table class="table table-sm table-hover align-middle mb-0">
             <thead>
-              <tr><th scope="col">סימול</th><th scope="col" class="text-end">מחיר</th><th scope="col" class="text-end">פער</th></tr>
+              <tr><th scope="col">סימול</th><th scope="col" class="text-end">מחיר</th><th scope="col" class="text-end"><bdi>%K</bdi></th><th scope="col" class="text-end">פער</th></tr>
             </thead>
             <tbody id="scan-list"></tbody>
           </table>

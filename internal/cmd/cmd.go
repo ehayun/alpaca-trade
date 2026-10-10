@@ -20,7 +20,8 @@ var Main = gcmd.Command{
 		s := g.Server()
 		s.Group("/", func(group *ghttp.RouterGroup) {
 			group.GET("/", func(r *ghttp.Request) {
-				if err := r.Response.WriteTpl("index.html"); err != nil {
+				tpl := g.Map{"maxSpreadPct": scanner.DefaultMaxSpreadPct(r.Context())}
+				if err := r.Response.WriteTpl("index.html", tpl); err != nil {
 					g.Log().Errorf(r.Context(), "%+v", err)
 				}
 			})

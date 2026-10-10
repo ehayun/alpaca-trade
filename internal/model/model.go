@@ -29,14 +29,32 @@ type EMA struct {
 	Points []Point `json:"points"`
 }
 
+// Stoch is the slow stochastic: %K (raw %K smoothed) and %D (average of %K), aligned with the candles.
+type Stoch struct {
+	K []Point `json:"k"`
+	D []Point `json:"d"`
+}
+
 // ScanMatch is one symbol's last close and EMAs; SpreadPct = (highest EMA - lowest EMA) / close * 100.
+// PriceSpreadPct is the same with the close as a fourth value.
 type ScanMatch struct {
-	Symbol    string  `json:"symbol"`
-	Close     float64 `json:"close"`
-	EMA20     float64 `json:"ema20"`
-	EMA100    float64 `json:"ema100"`
-	EMA200    float64 `json:"ema200"`
-	SpreadPct float64 `json:"spreadPct"`
+	Symbol         string  `json:"symbol"`
+	Close          float64 `json:"close"`
+	EMA20          float64 `json:"ema20"`
+	EMA100         float64 `json:"ema100"`
+	EMA200         float64 `json:"ema200"`
+	SpreadPct      float64 `json:"spreadPct"`
+	PriceSpreadPct float64 `json:"priceSpreadPct"`
+	StochK         float64 `json:"stochK"`
+	StochD         float64 `json:"stochD"`
+}
+
+// Spread is the value a scan compares with its limit: with or without the close.
+func (m ScanMatch) Spread(withPrice bool) float64 {
+	if withPrice {
+		return m.PriceSpreadPct
+	}
+	return m.SpreadPct
 }
 
 // ScanStatus is the state of the EMA scanner: progress while running, matches when done.
@@ -49,7 +67,9 @@ type ScanStatus struct {
 	Done         int         `json:"done"`    // symbols fetched so far
 	Scanned      int         `json:"scanned"` // symbols with enough history for EMA 200
 	MaxSpreadPct float64     `json:"maxSpreadPct"`
-	Matches      []ScanMatch `json:"matches"` // closest first
+	StochRule    string      `json:"stochRule"`  // "" (not used), oversold, overbought or bullcross
+	PriceClose   bool        `json:"priceClose"` // the close must also be inside the spread limit
+	Matches      []ScanMatch `json:"matches"`    // closest first
 }
 
 // Decimals marshal as JSON strings to keep exact values.

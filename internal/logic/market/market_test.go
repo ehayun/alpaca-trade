@@ -78,3 +78,36 @@ func TestEMA(t *testing.T) {
 		t.Fatalf("emas = %+v", emas)
 	}
 }
+
+func TestStochastic(t *testing.T) {
+	c := func(day string, high, low, close float64) model.Candle {
+		return model.Candle{Time: day, High: high, Low: low, Close: close}
+	}
+	all := []model.Candle{
+		c("d1", 10, 0, 5),   // range 0..10
+		c("d2", 10, 0, 10),  // raw (period 2): (10-0)/(10-0) = 100
+		c("d3", 10, 0, 0),   // raw 0
+		c("d4", 20, 10, 20), // range 0..20 -> raw 100
+		c("d5", 20, 20, 20), // range 10..20 -> raw 100
+		c("d6", 7, 7, 7),    // range 7..20 -> raw 0
+	}
+	// period 2, smooth 1 => %K = raw; dPeriod 2 => %D = 2-day average of %K.
+	k, d := Stochastic(all, 2, 1, 2)
+	p := func(day string, v float64) model.Point { return model.Point{Time: day, Value: v} }
+	wantK := []model.Point{p("d2", 100), p("d3", 0), p("d4", 100), p("d5", 100), p("d6", 0)}
+	wantD := []model.Point{p("d3", 50), p("d4", 50), p("d5", 100), p("d6", 50)}
+	if !reflect.DeepEqual(k, wantK) || !reflect.DeepEqual(d, wantD) {
+		t.Fatalf("k = %v, d = %v", k, d)
+	}
+
+	// Flat range: raw %K is 50, not a division by zero.
+	flat := []model.Candle{c("a", 5, 5, 5), c("b", 5, 5, 5), c("c", 5, 5, 5)}
+	if k, _ := Stochastic(flat, 2, 2, 1); len(k) != 1 || k[0].Value != 50 {
+		t.Fatalf("flat: %v", k)
+	}
+
+	// Too few candles.
+	if k, d := Stochastic(all[:1], 2, 1, 1); k != nil || d != nil {
+		t.Fatalf("short: %v %v", k, d)
+	}
+}

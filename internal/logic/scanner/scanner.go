@@ -63,9 +63,23 @@ func Status() model.ScanStatus {
 	return status
 }
 
+// Stochastic rules a scan can add to the EMA rule (with the slow stochastic 14, 3, 3).
+const (
+	StochOversold   = "oversold"   // %K <= 20
+	StochOverbought = "overbought" // %K >= 80
+	StochBullCross  = "bullcross"  // in the last 3 days, %K crossed above %D from 20 or less
+)
+
+// Options of one scan.
+type Options struct {
+	MaxSpreadPct float64
+	StochRule    string // "" = do not use the stochastic
+	PriceClose   bool   // the close must also be inside the limit (spread of EMAs + close)
+	ResultFile   string // a successful result is written here
+}
+
 // Start begins a scan in the background and returns at once; if a scan is running, it changes nothing.
-// A successful result is also written to resultFile.
-func Start(maxSpreadPct float64, resultFile string) model.ScanStatus {
+func Start(opts Options) model.ScanStatus {
 	mu.Lock()
 	defer mu.Unlock()
 	if status.Running {
@@ -74,13 +88,14 @@ func Start(maxSpreadPct float64, resultFile string) model.ScanStatus {
 	symbols := Symbols()
 	now := time.Now()
 	status = model.ScanStatus{
-		Running: true, StartedAt: &now, Total: len(symbols), MaxSpreadPct: maxSpreadPct, Matches: []model.ScanMatch{},
+		Running: true, StartedAt: &now, Total: len(symbols),
+		MaxSpreadPct: opts.MaxSpreadPct, StochRule: opts.StochRule, PriceClose: opts.PriceClose, Matches: []model.ScanMatch{},
 	}
-	go run(symbols, maxSpreadPct, resultFile)
+	go run(symbols, opts)
 	return status
 }
 
-func run(symbols []string, maxSpreadPct float64, resultFile string) {
+func run(symbols []string, opts Options) {
 	ctx := context.Background()
 	matches, scanned, failed := []model.ScanMatch{}, 0, false
 	defer func() {
@@ -95,7 +110,7 @@ func run(symbols []string, maxSpreadPct float64, resultFile string) {
 		status.Scanned = scanned
 		if !failed {
 			status.Matches = matches
-			if err := Save(resultFile, status); err != nil {
+			if err := Save(opts.ResultFile, status); err != nil {
 				g.Log().Errorf(ctx, "save scan: %+v", err)
 			}
 		}
@@ -110,12 +125,12 @@ func run(symbols []string, maxSpreadPct float64, resultFile string) {
 			return
 		}
 		for _, s := range chunk {
-			m, ok := Evaluate(s, candles[s])
+			m, ok, stochOK := Evaluate(s, candles[s], opts.StochRule)
 			if !ok {
 				continue
 			}
 			scanned++
-			if m.SpreadPct <= maxSpreadPct {
+			if m.Spread(opts.PriceClose) <= opts.MaxSpreadPct && stochOK {
 				matches = append(matches, m)
 			}
 		}
@@ -124,10 +139,11 @@ func run(symbols []string, maxSpreadPct float64, resultFile string) {
 		mu.Unlock()
 	}
 	slices.SortFunc(matches, func(a, b model.ScanMatch) int {
-		if a.SpreadPct < b.SpreadPct {
+		sa, sb := a.Spread(opts.PriceClose), b.Spread(opts.PriceClose)
+		if sa < sb {
 			return -1
 		}
-		if a.SpreadPct > b.SpreadPct {
+		if sa > sb {
 			return 1
 		}
 		return strings.Compare(a.Symbol, b.Symbol)
@@ -167,20 +183,49 @@ func Load(path string) (*model.ScanStatus, error) {
 	return &s, nil
 }
 
-// Evaluate computes the last EMAs and their spread; ok is false without enough history for EMA 200.
-func Evaluate(symbol string, candles []model.Candle) (m model.ScanMatch, ok bool) {
+// Evaluate computes the last EMAs, their spread and the stochastic; ok is false without enough history
+// for EMA 200. stochOK tells whether the symbol passes stochRule ("" always passes).
+func Evaluate(symbol string, candles []model.Candle, stochRule string) (m model.ScanMatch, ok, stochOK bool) {
 	if len(candles) < 200 {
-		return m, false
+		return m, false, false
 	}
 	last := candles[len(candles)-1].Close
 	if last <= 0 {
-		return m, false
+		return m, false, false
 	}
 	e20, e100, e200 := lastEMA(candles, 20), lastEMA(candles, 100), lastEMA(candles, 200)
 	hi, lo := max(e20, e100, e200), min(e20, e100, e200)
+	k, d := market.Stochastic(candles, market.StochPeriod, market.StochSmooth, market.StochD)
 	return model.ScanMatch{
-		Symbol: symbol, Close: last, EMA20: e20, EMA100: e100, EMA200: e200, SpreadPct: (hi - lo) / last * 100,
-	}, true
+		Symbol: symbol, Close: last, EMA20: e20, EMA100: e100, EMA200: e200,
+		SpreadPct:      (hi - lo) / last * 100,
+		PriceSpreadPct: (max(hi, last) - min(lo, last)) / last * 100,
+		StochK:         k[len(k)-1].Value, StochD: d[len(d)-1].Value,
+	}, true, StochPass(stochRule, k, d)
+}
+
+// StochPass checks one stochastic rule on %K and %D (each ends on the same, latest day).
+func StochPass(rule string, k, d []model.Point) bool {
+	if rule == "" {
+		return true
+	}
+	if len(k) == 0 || len(d) < 2 {
+		return false
+	}
+	switch last := k[len(k)-1].Value; rule {
+	case StochOversold:
+		return last <= 20
+	case StochOverbought:
+		return last >= 80
+	case StochBullCross:
+		k = k[len(k)-len(d):] // align %K with %D, which starts later
+		for i := max(1, len(d)-3); i < len(d); i++ {
+			if k[i-1].Value <= d[i-1].Value && k[i].Value > d[i].Value && k[i-1].Value <= 20 {
+				return true
+			}
+		}
+	}
+	return false
 }
 
 func lastEMA(candles []model.Candle, period int) float64 {

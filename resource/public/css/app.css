@@ -3,11 +3,11 @@
 }
 
 .chart-box {
-  height: 420px;
+  height: 560px; /* price pane + stochastic pane (140px) */
 }
 
 @media (max-width: 576px) {
-  .chart-box { height: 300px; }
+  .chart-box { height: 440px; }
 }
 
 /* Wide screens: the scanner panel keeps a fixed width and the chart takes the rest. */
