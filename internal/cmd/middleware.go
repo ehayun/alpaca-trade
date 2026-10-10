@@ -23,7 +23,9 @@ func responseMiddleware(r *ghttp.Request) {
 
 	code, msg := gerror.Code(err), "OK"
 	switch {
-	case err != nil && (code == consts.CodeUser || code == gcode.CodeValidationFailed):
+	case err != nil && code == consts.CodeUser:
+		msg = gerror.Cause(err).Error() // the Hebrew message, without wrap context
+	case err != nil && code == gcode.CodeValidationFailed:
 		msg = err.Error()
 	case err != nil:
 		g.Log().Errorf(r.Context(), "%+v", err)

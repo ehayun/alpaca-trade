@@ -2,8 +2,10 @@
 
 Hebrew (RTL) web app for US stocks: daily price charts and **paper** trading through Alpaca.
 
-- Price history: enter a symbol and a number of days (1 to 3650); candlestick chart by default, with OHLC bars and line as alternatives.
+- Price history: enter a symbol and a number of days (1 to 3650); candlestick chart by default, with OHLC bars and line as alternatives. EMA 20, 100 and 200 of the close are drawn on every chart type; the server fetches ~4 years of extra history so the EMAs match a full-history calculation.
 - Paper trading: account summary, market and limit day orders, open positions, open orders with cancel.
+- Info tab: company data, today's price and the 5 latest headlines for the charted symbol, plus an on-demand Hebrew news summary by Claude (`claude-opus-5-5`, cached 15 minutes per symbol).
+- EMA scanner (side panel): on demand, scans the S&P 500, Nasdaq-100 and Dow 30 (~518 symbols, ~1 minute) and lists the stocks whose EMA 20, 100 and 200 are within `scanner.maxSpreadPct` (default 1%) of the last close. Click a symbol to load its chart and info. Prices are split-adjusted.
 - Shareable links: `/?symbol=AAPL&days=90&chart=bars` opens with that chart loaded (`chart` = candles, bars, line).
 
 **Trading always goes to `https://paper-api.alpaca.markets`.** The URL is hard-coded in
@@ -14,6 +16,7 @@ Hebrew (RTL) web app for US stocks: daily price charts and **paper** trading thr
 - Go, [GoFrame v2](https://goframe.org/docs) (standard router, templates, validation)
 - [alpaca-trade-api-go v3](https://github.com/alpacahq/alpaca-trade-api-go): `marketdata` for prices, `alpaca` for trading
 - Bootstrap 5.3 RTL, Heebo font, [Lightweight Charts](https://tradingview.github.io/lightweight-charts/) 5 (all from CDN)
+- [anthropic-sdk-go](https://github.com/anthropics/anthropic-sdk-go) for the news summary
 - No database: Alpaca holds orders and positions
 
 ## Run
@@ -28,6 +31,7 @@ make run                # http://localhost:8000
 |---|---|
 | `APCA_API_KEY_ID` | Alpaca paper API key ID |
 | `APCA_API_SECRET_KEY` | Alpaca paper API secret |
+| `ANTHROPIC_API_KEY` | Claude API key for the news summary (optional; without it the summary button shows an error) |
 
 The port and other server settings live in `manifest/config/config.yaml`. No secrets go in that file.
 
@@ -45,14 +49,15 @@ make build    # bin/alpaca-app, a self-contained binary
 ## Layout
 
 ```
-api/{market,trade}/v1      request/response structs, routes, validation (Hebrew messages)
+api/{market,trade,scanner}/v1     request/response structs, routes, validation (Hebrew messages)
 internal/cmd               server setup, routes, response middleware
 internal/controller        thin handlers: request → logic → response
-internal/logic             Alpaca calls and business rules (market, trade)
+internal/logic             Alpaca calls and business rules (market, trade); Claude news summary (summary);
+                           EMA scanner + index lists (scanner/symbols/*.txt, update by hand when an index changes)
 internal/model             shared data shapes
 internal/consts            error codes and messages
 resource/template          index.html
-resource/public            css/, js/ (chart.js, trade.js, common.js)
+resource/public            css/, js/ (chart.js, info.js, scanner.js, trade.js, common.js)
 manifest/config            config.yaml
 hack/pack                  resource packer for production builds
 ```
@@ -65,7 +70,11 @@ server-side, and the client only gets a generic Hebrew message.
 
 | Method | Path | |
 |---|---|---|
-| GET | `/api/bars?symbol=AAPL&days=30` | daily candles |
+| GET | `/api/bars?symbol=AAPL&days=30` | daily candles and EMA 20/100/200 |
+| GET | `/api/info?symbol=AAPL` | company, today's price, 5 latest headlines |
+| GET | `/api/news-summary?symbol=AAPL` | Hebrew news summary by Claude (paid API call, cached 15 min) |
+| POST | `/api/scan` | start an EMA scan in the background (no-op while one runs) |
+| GET | `/api/scan` | scan progress, or the last result (kept in memory) |
 | GET | `/api/account` | equity, cash, buying power |
 | GET | `/api/positions` | open positions |
 | GET | `/api/orders` | open orders |

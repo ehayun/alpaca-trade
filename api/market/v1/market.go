@@ -15,4 +15,22 @@ type BarsReq struct {
 type BarsRes struct {
 	Symbol  string         `json:"symbol"`
 	Candles []model.Candle `json:"candles"`
+	EMAs    []model.EMA    `json:"emas"`
+}
+
+type InfoReq struct {
+	g.Meta `path:"/info" method:"get" tags:"Market" summary:"Company data, today's price and recent news"`
+	Symbol string `json:"symbol" v:"required|regex:^[A-Za-z.]{1,10}$#יש להזין סימול מניה|סימול המניה לא תקין"`
+}
+
+type InfoRes = model.StockInfo
+
+type NewsSummaryReq struct {
+	g.Meta `path:"/news-summary" method:"get" tags:"Market" summary:"Short Hebrew summary of recent news, by Claude"`
+	Symbol string `json:"symbol" v:"required|regex:^[A-Za-z.]{1,10}$#יש להזין סימול מניה|סימול המניה לא תקין"`
+}
+
+type NewsSummaryRes struct {
+	Symbol  string `json:"symbol"`
+	Summary string `json:"summary"`
 }

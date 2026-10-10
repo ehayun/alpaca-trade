@@ -8,6 +8,7 @@ import (
 	"github.com/gogf/gf/v2/os/gcmd"
 
 	"alpaca-app/internal/controller/market"
+	"alpaca-app/internal/controller/scanner"
 	"alpaca-app/internal/controller/trade"
 )
 
@@ -27,7 +28,7 @@ var Main = gcmd.Command{
 		})
 		s.Group("/api", func(group *ghttp.RouterGroup) {
 			group.Middleware(responseMiddleware)
-			group.Bind(market.NewV1(), trade.NewV1())
+			group.Bind(market.NewV1(), trade.NewV1(), scanner.NewV1())
 		})
 		s.Run()
 		return nil

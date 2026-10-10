@@ -31,6 +31,21 @@ func Account(ctx context.Context) (*model.Account, error) {
 	return &model.Account{Equity: a.Equity, Cash: a.Cash, BuyingPower: a.BuyingPower}, nil
 }
 
+// Asset returns company data; an unknown symbol is a user error.
+func Asset(ctx context.Context, symbol string) (*model.Asset, error) {
+	a, err := client.GetAsset(symbol)
+	var apiErr *alpaca.APIError
+	if errors.As(err, &apiErr) && apiErr.StatusCode == 404 {
+		return nil, userErr("הסימול " + symbol + " לא נמצא")
+	}
+	if err != nil {
+		return nil, err
+	}
+	return &model.Asset{
+		Name: a.Name, Exchange: a.Exchange, Tradable: a.Tradable, Shortable: a.Shortable, Fractionable: a.Fractionable,
+	}, nil
+}
+
 func Positions(ctx context.Context) ([]model.Position, error) {
 	ps, err := client.GetPositions()
 	if err != nil {

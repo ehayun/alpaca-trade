@@ -1,6 +1,7 @@
 package market
 
 import (
+	"reflect"
 	"testing"
 	"time"
 
@@ -27,5 +28,53 @@ func TestToCandles(t *testing.T) {
 	want := model.Candle{Time: "2026-09-08", Open: 1, High: 3, Low: 0.5, Close: 2, Volume: 10}
 	if len(got) != 1 || got[0] != want {
 		t.Fatalf("got %+v, want %+v", got, want)
+	}
+}
+
+func TestToQuote(t *testing.T) {
+	q := ToQuote(&marketdata.Snapshot{
+		LatestTrade:  &marketdata.Trade{Price: 110},
+		DailyBar:     &marketdata.Bar{Open: 101, High: 112, Low: 99, Close: 108, Volume: 5},
+		PrevDailyBar: &marketdata.Bar{Close: 100},
+	})
+	if *q.Price != 110 || *q.PrevClose != 100 || *q.Change != 10 || *q.ChangePct != 10 || *q.Open != 101 || *q.Volume != 5 {
+		t.Fatalf("got %+v", q)
+	}
+
+	// No latest trade: the daily close is the price.
+	q = ToQuote(&marketdata.Snapshot{DailyBar: &marketdata.Bar{Close: 95}, PrevDailyBar: &marketdata.Bar{Close: 100}})
+	if *q.Price != 95 || *q.Change != -5 || *q.ChangePct != -5 {
+		t.Fatalf("got %+v", q)
+	}
+
+	// No previous day (new listing) or no snapshot: no change, no panic.
+	if q = ToQuote(&marketdata.Snapshot{LatestTrade: &marketdata.Trade{Price: 1}}); q.Change != nil || q.PrevClose != nil {
+		t.Fatalf("got %+v", q)
+	}
+	if q = ToQuote(nil); q.Price != nil {
+		t.Fatalf("got %+v", q)
+	}
+}
+
+func TestEMA(t *testing.T) {
+	c := func(day string, close float64) model.Candle { return model.Candle{Time: day, Close: close} }
+	all := []model.Candle{c("2026-01-01", 1), c("2026-01-02", 2), c("2026-01-03", 3), c("2026-01-04", 6)}
+
+	// Period 3: seed = (1+2+3)/3 = 2 on day 3; then k = 0.5: 6*0.5 + 2*0.5 = 4.
+	want := []model.Point{{Time: "2026-01-03", Value: 2}, {Time: "2026-01-04", Value: 4}}
+	if got := EMA(all, 3); !reflect.DeepEqual(got, want) {
+		t.Fatalf("EMA = %+v, want %+v", got, want)
+	}
+	if got := EMA(all, 5); got != nil {
+		t.Fatalf("too few candles: got %+v, want nil", got)
+	}
+
+	// Warm-up days are used for the EMA but cut from the result.
+	candles, emas := WithEMAs(all, "2026-01-04", 3, 5)
+	if len(candles) != 1 || candles[0].Time != "2026-01-04" {
+		t.Fatalf("candles = %+v", candles)
+	}
+	if len(emas) != 2 || !reflect.DeepEqual(emas[0].Points, want[1:]) || len(emas[1].Points) != 0 {
+		t.Fatalf("emas = %+v", emas)
 	}
 }

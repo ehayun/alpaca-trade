@@ -9,3 +9,26 @@
 @media (max-width: 576px) {
   .chart-box { height: 300px; }
 }
+
+/* Scanner results scroll inside the side panel. */
+.scan-list { max-height: 560px; overflow-y: auto; }
+@media (max-width: 991.98px) {
+  .scan-list { max-height: 240px; } /* stacked above the chart: keep the chart in reach */
+}
+
+/* Claude returns one point per line. */
+.summary-text { white-space: pre-line; }
+
+/* Color-blind safe gain/loss (Okabe-Ito), matches chart.js */
+.text-up { color: #0072B2; }
+.text-down { color: #E69F00; }
+
+/* EMA legend: a short line in the series color and dash, then the label. */
+.ema-key::before {
+  content: "";
+  display: inline-block;
+  width: 1.5rem;
+  margin-inline-end: .35rem;
+  vertical-align: middle;
+  border-top: 2px var(--ema-dash) var(--ema-color);
+}

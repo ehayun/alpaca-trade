@@ -24,6 +24,9 @@ func TestResponseMiddleware(t *testing.T) {
 		group.Middleware(responseMiddleware)
 		group.GET("/ok", func(r *ghttp.Request) {})
 		group.GET("/user", func(r *ghttp.Request) { r.SetError(gerror.NewCode(consts.CodeUser, "הודעה למשתמש")) })
+		group.GET("/wrapped", func(r *ghttp.Request) {
+			r.SetError(gerror.Wrap(gerror.NewCode(consts.CodeUser, "הודעה למשתמש"), "asset X"))
+		})
 		group.GET("/internal", func(r *ghttp.Request) { r.SetError(errors.New("db password=secret")) })
 		group.GET("/panic", func(r *ghttp.Request) { panic("secret panic") })
 	})
@@ -40,6 +43,7 @@ func TestResponseMiddleware(t *testing.T) {
 	}{
 		{"/ok", gcode.CodeOK.Code(), "OK"},
 		{"/user", consts.CodeUser.Code(), "הודעה למשתמש"},
+		{"/wrapped", consts.CodeUser.Code(), "הודעה למשתמש"},
 		{"/internal", gcode.CodeInternalError.Code(), consts.MsgInternal},
 		{"/panic", gcode.CodeInternalError.Code(), consts.MsgInternal},
 	}

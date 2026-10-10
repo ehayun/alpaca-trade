@@ -29,7 +29,7 @@ async function loadPositions() {
       cell(usd(p.avgEntryPrice), { ltr: true }),
       cell(usd(p.currentPrice), { ltr: true }),
       cell(usd(p.marketValue), { ltr: true }),
-      cell(usd(p.unrealizedPl), { ltr: true, cls: pl >= 0 ? 'text-success' : 'text-danger' }),
+      cell(usd(p.unrealizedPl), { ltr: true, cls: pl >= 0 ? 'text-up' : 'text-down' }),
     );
     body.append(tr);
   }
