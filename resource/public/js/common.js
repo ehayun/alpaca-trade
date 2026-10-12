@@ -6,6 +6,10 @@ export async function api(path, options = {}) {
     headers: { 'Content-Type': 'application/json' },
     ...options,
   });
+  if (res.status === 401) {
+    location.href = '/login'; // the 60-minute login cookie expired
+    throw new Error('נדרשת התחברות');
+  }
   let body;
   try {
     body = await res.json();

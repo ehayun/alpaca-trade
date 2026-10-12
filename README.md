@@ -31,6 +31,8 @@ make run                # http://localhost:8000
 |---|---|
 | `APCA_API_KEY_ID` | Alpaca paper API key ID |
 | `APCA_API_SECRET_KEY` | Alpaca paper API secret |
+| `APP_USER` | Login user name for the web page (required) |
+| `APP_PASSWORD` | Login password (required). The login cookie is good for 60 minutes |
 | `ANTHROPIC_API_KEY` | Claude API key for the news summary (optional; without it the summary button shows an error) |
 
 The port and other server settings live in `manifest/config/config.yaml`. No secrets go in that file.
