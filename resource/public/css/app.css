@@ -19,7 +19,7 @@
 /* Scanner results scroll inside the side panel. */
 .scan-list { max-height: 560px; overflow-y: auto; }
 .scan-list thead th { position: sticky; top: 0; z-index: 1; } /* header stays while the rows scroll */
-.scan-list tbody tr { cursor: pointer; }
+.row-pick { cursor: pointer; } /* table rows that open their symbol on the chart */
 .scan-list td { font-variant-numeric: tabular-nums; } /* digits line up in the price and spread columns */
 @media (max-width: 991.98px) {
   .scan-list { max-height: 240px; } /* stacked above the chart: keep the chart in reach */

@@ -42,6 +42,40 @@ export function hideMessage(el) {
   el.textContent = '';
 }
 
+// openSymbol loads a symbol into the chart (and so the info tabs and the order form).
+export function openSymbol(symbol) {
+  const form = document.getElementById('bars-form');
+  form.symbol.value = symbol;
+  form.requestSubmit();
+  // Bring the chart into view when the row that was clicked is far from it.
+  const top = form.getBoundingClientRect().top;
+  if (top < 0 || top > innerHeight) form.scrollIntoView({ behavior: 'smooth' });
+}
+
+// pickable makes a table row open its symbol on click, Enter or Space.
+export function pickable(tr, symbol) {
+  tr.dataset.symbol = symbol;
+  tr.tabIndex = 0;
+  tr.classList.add('row-pick');
+  tr.addEventListener('click', () => openSymbol(symbol));
+  tr.addEventListener('keydown', (e) => {
+    if (e.target === tr && (e.key === 'Enter' || e.key === ' ')) {
+      e.preventDefault();
+      openSymbol(symbol);
+    }
+  });
+}
+
+// markShown highlights the rows of the symbol that is on the chart.
+export function markShown(body, symbol) {
+  for (const tr of body.children) {
+    const on = tr.dataset.symbol === symbol;
+    tr.classList.toggle('table-primary', on);
+    if (on) tr.setAttribute('aria-current', 'true');
+    else tr.removeAttribute('aria-current');
+  }
+}
+
 // cell builds a <td>; numbers and symbols are isolated so they don't flip inside RTL text.
 export function cell(text, { ltr = false, cls = '' } = {}) {
   const td = document.createElement('td');

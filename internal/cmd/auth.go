@@ -72,7 +72,7 @@ func (a *auth) middleware(r *ghttp.Request) {
 		return
 	}
 	if strings.HasPrefix(r.URL.Path, "/api/") {
-		r.Response.WriteStatus(http.StatusUnauthorized)
+		r.Response.WriteHeader(http.StatusUnauthorized)
 		r.Response.WriteJson(ghttp.DefaultHandlerResponse{Code: http.StatusUnauthorized, Message: "נדרשת התחברות"})
 		return
 	}

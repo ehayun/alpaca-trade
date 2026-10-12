@@ -1,5 +1,5 @@
 // Paper trading: account summary, order form, positions, open orders.
-import { api, usd, num, dateTime, showMessage, hideMessage, cell } from './common.js';
+import { api, usd, num, dateTime, showMessage, hideMessage, cell, pickable, markShown } from './common.js';
 
 const $ = (id) => document.getElementById(id);
 const orderForm = $('order-form');
@@ -8,6 +8,7 @@ const tradeMsg = $('trade-msg');
 
 const SIDE = { buy: 'קנייה', sell: 'מכירה' };
 const TYPE = { market: 'שוק', limit: 'לימיט' };
+let shown = ''; // symbol on the chart, highlighted in the tables
 
 async function loadAccount() {
   const a = await api('/api/account');
@@ -20,9 +21,12 @@ async function loadPositions() {
   const { positions } = await api('/api/positions');
   const body = $('positions-body');
   body.replaceChildren();
+  let total = 0;
   for (const p of positions) {
     const pl = Number(p.unrealizedPl);
+    total += pl;
     const tr = document.createElement('tr');
+    pickable(tr, p.symbol);
     tr.append(
       cell(p.symbol, { ltr: true }),
       cell(num(p.qty), { ltr: true }),
@@ -33,6 +37,11 @@ async function loadPositions() {
     );
     body.append(tr);
   }
+  markShown(body, shown);
+  const sum = $('positions-total');
+  sum.textContent = usd(total);
+  sum.className = total >= 0 ? 'text-up' : 'text-down';
+  $('positions-foot').classList.toggle('d-none', positions.length === 0);
   $('positions-empty').classList.toggle('d-none', positions.length > 0);
 }
 
@@ -42,11 +51,15 @@ async function loadOrders() {
   body.replaceChildren();
   for (const o of orders) {
     const tr = document.createElement('tr');
+    pickable(tr, o.symbol);
     const btnCell = document.createElement('td');
     const btn = document.createElement('button');
     btn.className = 'btn btn-sm btn-outline-danger';
     btn.textContent = 'ביטול';
-    btn.addEventListener('click', () => cancelOrder(o.id, btn));
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation(); // cancel only, do not open the symbol
+      cancelOrder(o.id, btn);
+    });
     btnCell.append(btn);
     tr.append(
       cell(dateTime(o.createdAt)),
@@ -60,6 +73,7 @@ async function loadOrders() {
     );
     body.append(tr);
   }
+  markShown(body, shown);
   $('orders-empty').classList.toggle('d-none', orders.length > 0);
 }
 
@@ -118,6 +132,9 @@ orderForm.addEventListener('submit', async (e) => {
 // The order symbol follows the chart; it can still be edited before sending.
 document.addEventListener('symbol-loaded', (e) => {
   orderForm.symbol.value = e.detail;
+  shown = e.detail;
+  markShown($('positions-body'), shown);
+  markShown($('orders-body'), shown);
 });
 
 $('refresh-btn').addEventListener('click', refresh);

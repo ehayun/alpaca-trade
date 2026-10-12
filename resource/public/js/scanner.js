@@ -1,21 +1,19 @@
 // EMA scanner side panel: choose the spread limit and whether the price must be close too, start a scan,
 // show progress, list the matches with live prices; a click loads the chart and info.
 // On open, a saved scan (if any) is offered instead of a new scan.
-import { api, showMessage, hideMessage, num, usd, dateTime } from './common.js';
+import { api, showMessage, hideMessage, num, usd, dateTime, pickable, markShown } from './common.js';
 
 const $ = (id) => document.getElementById(id);
 const btn = $('scan-btn');
 const statusEl = $('scan-status');
 const msg = $('scan-msg');
 const list = $('scan-list');
-const form = $('bars-form');
 const saved = $('scan-saved');
 const pctInput = $('scan-pct');
 const priceClose = $('scan-price-close');
 
 
 const POLL_MS = 2000;
-const stacked = matchMedia('(max-width: 991.98px)'); // Bootstrap lg breakpoint
 let shown = ''; // symbol on the chart, highlighted in the list
 
 // The settings a scan ran with, e.g. "עד 2% כולל המחיר".
@@ -38,18 +36,9 @@ function td(text, cls = '') {
   return cell;
 }
 
-function openSymbol(symbol) {
-  form.symbol.value = symbol;
-  form.requestSubmit();
-  // When the panel is stacked above the chart (narrow screens), bring the chart into view.
-  if (stacked.matches) form.scrollIntoView({ behavior: 'smooth' });
-}
-
 // The spread a scan used: with the close as a fourth value when the price rule was on.
 function row(m, withPrice) {
   const tr = document.createElement('tr');
-  tr.dataset.symbol = m.symbol;
-  tr.tabIndex = 0; // rows open with Enter or Space too
   tr.title = `EMA 20: ${m.ema20.toFixed(2)} · EMA 100: ${m.ema100.toFixed(2)} · EMA 200: ${m.ema200.toFixed(2)}`
     + ` · סגירה: ${m.close.toFixed(2)}`;
   tr.append(
@@ -57,23 +46,12 @@ function row(m, withPrice) {
     td(usd(m.close), 'text-end scan-price'), // close at scan time until the live price arrives
     td(`${(withPrice ? m.priceSpreadPct : m.spreadPct).toFixed(2)}%`, 'text-end text-body-secondary'),
   );
-  tr.addEventListener('click', () => openSymbol(m.symbol));
-  tr.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter' || e.key === ' ') {
-      e.preventDefault();
-      openSymbol(m.symbol);
-    }
-  });
+  pickable(tr, m.symbol);
   return tr;
 }
 
 function highlight() {
-  for (const tr of list.children) {
-    const on = tr.dataset.symbol === shown;
-    tr.classList.toggle('table-primary', on);
-    if (on) tr.setAttribute('aria-current', 'true');
-    else tr.removeAttribute('aria-current');
-  }
+  markShown(list, shown);
 }
 
 // Live prices for the listed symbols, in one request. On failure the scan-time close stays.

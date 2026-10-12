@@ -1,7 +1,9 @@
 package cmd
 
 import (
+	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"net/url"
 	"strings"
@@ -55,6 +57,7 @@ func TestAuthMiddleware(t *testing.T) {
 	base := fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort())
 	c := &http.Client{CheckRedirect: func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse }}
 
+	var lastBody string
 	get := func(path, cookie string) *http.Response {
 		req, _ := http.NewRequest("GET", base+path, nil)
 		if cookie != "" {
@@ -64,14 +67,16 @@ func TestAuthMiddleware(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
+		raw, _ := io.ReadAll(resp.Body)
 		resp.Body.Close()
+		lastBody = string(raw)
 		return resp
 	}
 	if r := get("/", ""); r.StatusCode != http.StatusFound || r.Header.Get("Location") != "/login" {
 		t.Errorf("page without cookie: %d %s", r.StatusCode, r.Header.Get("Location"))
 	}
-	if r := get("/api/x", ""); r.StatusCode != http.StatusUnauthorized {
-		t.Errorf("api without cookie: %d", r.StatusCode)
+	if r := get("/api/x", ""); r.StatusCode != http.StatusUnauthorized || !json.Valid([]byte(lastBody)) {
+		t.Errorf("api without cookie: %d %q", r.StatusCode, lastBody)
 	}
 
 	resp, err := c.PostForm(base+"/login", url.Values{"user": {"eli"}, "password": {"pw"}})
