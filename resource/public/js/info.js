@@ -1,10 +1,21 @@
-// The info tab: company, today's price and news from /api/info.
+// Chart/info tabs, and the info tab: company, today's price and news from /api/info.
 import { api, showMessage, hideMessage, usd, num, dateTime } from './common.js';
 
 const $ = (id) => document.getElementById(id);
+const tabs = document.querySelectorAll('[role=tab]');
 const status = $('info-status');
 const msg = $('info-msg');
 const body = $('info-body');
+
+function showTab(tab) {
+  tabs.forEach((t) => {
+    const on = t === tab;
+    t.classList.toggle('active', on);
+    t.setAttribute('aria-selected', on);
+    $(t.getAttribute('aria-controls')).hidden = !on;
+  });
+}
+tabs.forEach((t) => t.addEventListener('click', () => showTab(t)));
 
 // row appends a label/value pair, styled like the account card.
 function row(dl, label, value, cls = '') {
