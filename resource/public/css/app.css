@@ -16,7 +16,10 @@
   .chart-col { flex: 1 1 0; width: auto; min-width: 0; }
 }
 
-/* Scanner results scroll inside the side panel. */
+/* Four tabs fit the narrow side panel. */
+.side-tabs .nav-link { padding: .5rem .6rem; }
+
+/* Scanner, positions and orders tables scroll inside the side panel. */
 .scan-list { max-height: 560px; overflow-y: auto; }
 .scan-list thead th { position: sticky; top: 0; z-index: 1; } /* header stays while the rows scroll */
 .row-pick { cursor: pointer; } /* table rows that open their symbol on the chart */

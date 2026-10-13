@@ -23,55 +23,130 @@
 </nav>
 
 <main class="container-fluid px-lg-4 pb-5">
-  <ul class="nav nav-tabs mb-4" role="tablist">
-    <li class="nav-item" role="presentation">
-      <button id="tab-scan" class="nav-link active" type="button" role="tab" aria-controls="panel-scan" aria-selected="true">סורק וגרף</button>
-    </li>
-    <li class="nav-item" role="presentation">
-      <button id="tab-trade" class="nav-link" type="button" role="tab" aria-controls="panel-trade" aria-selected="false">מסחר</button>
-    </li>
-  </ul>
-
-  <div id="panel-scan" role="tabpanel" aria-labelledby="tab-scan">
   <div class="row g-4">
   <aside class="col-lg-3 scan-col">
     <section class="card shadow-sm h-100">
       <div class="card-body d-flex flex-column">
-        <div class="d-flex align-items-center mb-2">
-          <h2 class="h6 card-title mb-0">סורק ממוצעים נעים</h2>
-          <button id="scan-btn" type="button" class="btn btn-sm btn-outline-primary ms-auto">סרוק עכשיו</button>
+        <div class="d-flex mb-2">
+          <button id="refresh-btn" type="button" class="btn btn-sm btn-outline-secondary ms-auto">רענון מסחר</button>
         </div>
-        <p class="small text-body-secondary mb-2">
-          מניות מ-<bdi>S&amp;P 500</bdi>, <bdi>Nasdaq-100</bdi> ו-<bdi>Dow 30</bdi> שבהן <bdi>EMA 20</bdi>, <bdi>100</bdi> ו-<bdi>200</bdi> קרובים זה לזה.
-        </p>
-        <div class="row g-2 align-items-end mb-2">
-          <div class="col-5">
-            <label for="scan-pct" class="form-label small mb-1">פער מקסימלי (%)</label>
-            <input id="scan-pct" type="number" class="form-control form-control-sm" dir="ltr" min="0.1" max="20" step="0.1" value="{{.maxSpreadPct}}" required>
+        <div id="trade-msg" class="alert d-none" role="alert"></div>
+        <ul class="nav nav-tabs side-tabs mb-3" role="tablist">
+          <li class="nav-item" role="presentation">
+            <button id="tab-scan" class="nav-link active" type="button" role="tab" aria-controls="panel-scan" aria-selected="true">סורק</button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button id="tab-positions" class="nav-link" type="button" role="tab" aria-controls="panel-positions" aria-selected="false">פוזיציות</button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button id="tab-order" class="nav-link" type="button" role="tab" aria-controls="panel-order" aria-selected="false">מסחר</button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button id="tab-orders" class="nav-link" type="button" role="tab" aria-controls="panel-orders" aria-selected="false">פקודות</button>
+          </li>
+        </ul>
+        <div id="panel-scan" role="tabpanel" aria-labelledby="tab-scan">
+          <div class="d-flex align-items-center mb-2">
+            <h2 class="h6 card-title mb-0">סורק ממוצעים נעים</h2>
+            <button id="scan-btn" type="button" class="btn btn-sm btn-outline-primary ms-auto">סרוק עכשיו</button>
           </div>
-          <div class="col-7">
-            <div class="form-check mb-1">
-              <input id="scan-price-close" class="form-check-input" type="checkbox">
-              <label for="scan-price-close" class="form-check-label small">המחיר קרוב לממוצעים (באותו פער)</label>
+          <p class="small text-body-secondary mb-2">
+            מניות מ-<bdi>S&amp;P 500</bdi>, <bdi>Nasdaq-100</bdi> ו-<bdi>Dow 30</bdi> שבהן <bdi>EMA 20</bdi>, <bdi>100</bdi> ו-<bdi>200</bdi> קרובים זה לזה.
+          </p>
+          <div class="row g-2 align-items-end mb-2">
+            <div class="col-5">
+              <label for="scan-pct" class="form-label small mb-1">פער מקסימלי (%)</label>
+              <input id="scan-pct" type="number" class="form-control form-control-sm" dir="ltr" min="0.1" max="20" step="0.1" value="{{.maxSpreadPct}}" required>
+            </div>
+            <div class="col-7">
+              <div class="form-check mb-1">
+                <input id="scan-price-close" class="form-check-input" type="checkbox">
+                <label for="scan-price-close" class="form-check-label small">המחיר קרוב לממוצעים (באותו פער)</label>
+              </div>
             </div>
           </div>
-        </div>
-        <div id="scan-status" class="small text-body-secondary mb-2" aria-live="polite">עדיין לא נסרק.</div>
-        <div id="scan-saved" class="alert alert-info small" hidden>
-          <p id="scan-saved-text" class="mb-2"></p>
-          <div class="d-flex flex-wrap gap-2">
-            <button id="scan-saved-use" type="button" class="btn btn-sm btn-primary">השתמש בסריקה השמורה</button>
-            <button id="scan-saved-rescan" type="button" class="btn btn-sm btn-outline-primary">סרוק מחדש</button>
+          <div id="scan-status" class="small text-body-secondary mb-2" aria-live="polite">עדיין לא נסרק.</div>
+          <div id="scan-saved" class="alert alert-info small" hidden>
+            <p id="scan-saved-text" class="mb-2"></p>
+            <div class="d-flex flex-wrap gap-2">
+              <button id="scan-saved-use" type="button" class="btn btn-sm btn-primary">השתמש בסריקה השמורה</button>
+              <button id="scan-saved-rescan" type="button" class="btn btn-sm btn-outline-primary">סרוק מחדש</button>
+            </div>
+          </div>
+          <div id="scan-msg" class="alert d-none" role="alert"></div>
+          <div id="scan-table" class="scan-list" hidden>
+            <table class="table table-sm table-hover align-middle mb-0">
+              <thead>
+                <tr><th scope="col">סימול</th><th scope="col" class="text-end">מחיר</th><th scope="col" class="text-end">פער</th></tr>
+              </thead>
+              <tbody id="scan-list"></tbody>
+            </table>
           </div>
         </div>
-        <div id="scan-msg" class="alert d-none" role="alert"></div>
-        <div id="scan-table" class="scan-list" hidden>
-          <table class="table table-sm table-hover align-middle mb-0">
-            <thead>
-              <tr><th scope="col">סימול</th><th scope="col" class="text-end">מחיר</th><th scope="col" class="text-end">פער</th></tr>
-            </thead>
-            <tbody id="scan-list"></tbody>
-          </table>
+        <div id="panel-positions" role="tabpanel" aria-labelledby="tab-positions" hidden>
+          <h2 class="h6">החשבון שלי</h2>
+            <dl class="row mb-0">
+              <dt class="col-6 fw-normal text-body-secondary">שווי תיק</dt><dd class="col-6 text-end"><bdi id="acc-equity">-</bdi></dd>
+              <dt class="col-6 fw-normal text-body-secondary">מזומן</dt><dd class="col-6 text-end"><bdi id="acc-cash">-</bdi></dd>
+              <dt class="col-6 fw-normal text-body-secondary">כוח קנייה</dt><dd class="col-6 text-end mb-0"><bdi id="acc-buying">-</bdi></dd>
+            </dl>
+          <h2 class="h6 mt-4">פוזיציות פתוחות</h2>
+            <div class="table-responsive scan-list">
+              <table class="table table-sm align-middle mb-0">
+                <thead><tr><th>סימול</th><th>כמות</th><th>מחיר כניסה</th><th>מחיר נוכחי</th><th>שווי</th><th>רווח/הפסד</th></tr></thead>
+                <tbody id="positions-body"></tbody>
+                <tfoot id="positions-foot" class="d-none">
+                  <tr class="fw-bold"><td colspan="5">סה״כ רווח/הפסד</td><td><bdi id="positions-total"></bdi></td></tr>
+                </tfoot>
+              </table>
+            </div>
+            <p id="positions-empty" class="text-body-secondary mb-0 mt-2 d-none">אין פוזיציות פתוחות.</p>
+        </div>
+        <div id="panel-order" role="tabpanel" aria-labelledby="tab-order" hidden>
+          <h2 class="h6">פקודה חדשה</h2>
+            <form id="order-form" class="row g-3" novalidate>
+              <div class="col-6">
+                <label for="order-symbol" class="form-label">סימול</label>
+                <input id="order-symbol" name="symbol" class="form-control" dir="ltr" placeholder="AAPL" maxlength="10" required>
+              </div>
+              <div class="col-6">
+                <label for="order-side" class="form-label">כיוון</label>
+                <select id="order-side" name="side" class="form-select">
+                  <option value="buy">קנייה</option>
+                  <option value="sell">מכירה</option>
+                </select>
+              </div>
+              <div class="col-6">
+                <label for="order-type" class="form-label">סוג</label>
+                <select id="order-type" name="type" class="form-select">
+                  <option value="market">שוק</option>
+                  <option value="limit">לימיט</option>
+                </select>
+              </div>
+              <div class="col-6">
+                <label for="order-qty" class="form-label">כמות</label>
+                <input id="order-qty" name="qty" type="number" class="form-control" dir="ltr" min="0" step="any" required>
+              </div>
+              <div id="limit-group" class="col-12 d-none">
+                <label for="order-limit" class="form-label">מחיר לימיט (<bdi>$</bdi>)</label>
+                <input id="order-limit" name="limitPrice" type="number" class="form-control" dir="ltr" min="0" step="0.01">
+              </div>
+              <div class="col-12">
+                <div class="form-text mb-2">הפקודה תקפה עד סוף יום המסחר.</div>
+                <button type="submit" class="btn btn-success w-100">שלח פקודה</button>
+              </div>
+            </form>
+            <div id="order-msg" class="alert d-none mt-3 mb-0" role="alert"></div>
+        </div>
+        <div id="panel-orders" role="tabpanel" aria-labelledby="tab-orders" hidden>
+          <h2 class="h6">פקודות פתוחות</h2>
+            <div class="table-responsive scan-list">
+              <table class="table table-sm align-middle mb-0">
+                <thead><tr><th>נשלחה</th><th>סימול</th><th>כיוון</th><th>סוג</th><th>כמות</th><th>מחיר לימיט</th><th>סטטוס</th><th></th></tr></thead>
+                <tbody id="orders-body"></tbody>
+              </table>
+            </div>
+            <p id="orders-empty" class="text-body-secondary mb-0 mt-2 d-none">אין פקודות פתוחות.</p>
         </div>
       </div>
     </section>
@@ -145,100 +220,6 @@
       </div>
     </div>
   </section>
-  </div>
-  </div>
-  </div>
-
-  <div id="panel-trade" role="tabpanel" aria-labelledby="tab-trade" hidden>
-  <div class="d-flex align-items-center mb-3">
-    <h2 class="h5 mb-0">מסחר</h2>
-    <button id="refresh-btn" type="button" class="btn btn-sm btn-outline-secondary ms-auto">רענון</button>
-  </div>
-  <div id="trade-msg" class="alert d-none" role="alert"></div>
-
-  <div class="row g-4">
-    <div class="col-lg-4">
-      <section class="card shadow-sm mb-4">
-        <div class="card-body">
-          <h3 class="h6 card-title">החשבון שלי</h3>
-          <dl class="row mb-0">
-            <dt class="col-6 fw-normal text-body-secondary">שווי תיק</dt><dd class="col-6 text-end"><bdi id="acc-equity">-</bdi></dd>
-            <dt class="col-6 fw-normal text-body-secondary">מזומן</dt><dd class="col-6 text-end"><bdi id="acc-cash">-</bdi></dd>
-            <dt class="col-6 fw-normal text-body-secondary">כוח קנייה</dt><dd class="col-6 text-end mb-0"><bdi id="acc-buying">-</bdi></dd>
-          </dl>
-        </div>
-      </section>
-
-      <section class="card shadow-sm">
-        <div class="card-body">
-          <h3 class="h6 card-title">פקודה חדשה</h3>
-          <form id="order-form" class="row g-3" novalidate>
-            <div class="col-6">
-              <label for="order-symbol" class="form-label">סימול</label>
-              <input id="order-symbol" name="symbol" class="form-control" dir="ltr" placeholder="AAPL" maxlength="10" required>
-            </div>
-            <div class="col-6">
-              <label for="order-side" class="form-label">כיוון</label>
-              <select id="order-side" name="side" class="form-select">
-                <option value="buy">קנייה</option>
-                <option value="sell">מכירה</option>
-              </select>
-            </div>
-            <div class="col-6">
-              <label for="order-type" class="form-label">סוג</label>
-              <select id="order-type" name="type" class="form-select">
-                <option value="market">שוק</option>
-                <option value="limit">לימיט</option>
-              </select>
-            </div>
-            <div class="col-6">
-              <label for="order-qty" class="form-label">כמות</label>
-              <input id="order-qty" name="qty" type="number" class="form-control" dir="ltr" min="0" step="any" required>
-            </div>
-            <div id="limit-group" class="col-12 d-none">
-              <label for="order-limit" class="form-label">מחיר לימיט (<bdi>$</bdi>)</label>
-              <input id="order-limit" name="limitPrice" type="number" class="form-control" dir="ltr" min="0" step="0.01">
-            </div>
-            <div class="col-12">
-              <div class="form-text mb-2">הפקודה תקפה עד סוף יום המסחר.</div>
-              <button type="submit" class="btn btn-success w-100">שלח פקודה</button>
-            </div>
-          </form>
-          <div id="order-msg" class="alert d-none mt-3 mb-0" role="alert"></div>
-        </div>
-      </section>
-    </div>
-
-    <div class="col-lg-8">
-      <section class="card shadow-sm mb-4">
-        <div class="card-body">
-          <h3 class="h6 card-title">פוזיציות פתוחות</h3>
-          <div class="table-responsive">
-            <table class="table table-sm align-middle mb-0">
-              <thead><tr><th>סימול</th><th>כמות</th><th>מחיר כניסה</th><th>מחיר נוכחי</th><th>שווי</th><th>רווח/הפסד</th></tr></thead>
-              <tbody id="positions-body"></tbody>
-              <tfoot id="positions-foot" class="d-none">
-                <tr class="fw-bold"><td colspan="5">סה״כ רווח/הפסד</td><td><bdi id="positions-total"></bdi></td></tr>
-              </tfoot>
-            </table>
-          </div>
-          <p id="positions-empty" class="text-body-secondary mb-0 mt-2 d-none">אין פוזיציות פתוחות.</p>
-        </div>
-      </section>
-
-      <section class="card shadow-sm">
-        <div class="card-body">
-          <h3 class="h6 card-title">פקודות פתוחות</h3>
-          <div class="table-responsive">
-            <table class="table table-sm align-middle mb-0">
-              <thead><tr><th>נשלחה</th><th>סימול</th><th>כיוון</th><th>סוג</th><th>כמות</th><th>מחיר לימיט</th><th>סטטוס</th><th></th></tr></thead>
-              <tbody id="orders-body"></tbody>
-            </table>
-          </div>
-          <p id="orders-empty" class="text-body-secondary mb-0 mt-2 d-none">אין פקודות פתוחות.</p>
-        </div>
-      </section>
-    </div>
   </div>
   </div>
 </main>
