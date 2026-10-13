@@ -23,7 +23,17 @@
 </nav>
 
 <main class="container-fluid px-lg-4 pb-5">
-  <div class="row g-4 mb-4">
+  <ul class="nav nav-tabs mb-4" role="tablist">
+    <li class="nav-item" role="presentation">
+      <button id="tab-scan" class="nav-link active" type="button" role="tab" aria-controls="panel-scan" aria-selected="true">סורק וגרף</button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button id="tab-trade" class="nav-link" type="button" role="tab" aria-controls="panel-trade" aria-selected="false">מסחר</button>
+    </li>
+  </ul>
+
+  <div id="panel-scan" role="tabpanel" aria-labelledby="tab-scan">
+  <div class="row g-4">
   <aside class="col-lg-3 scan-col">
     <section class="card shadow-sm h-100">
       <div class="card-body d-flex flex-column">
@@ -137,7 +147,9 @@
   </section>
   </div>
   </div>
+  </div>
 
+  <div id="panel-trade" role="tabpanel" aria-labelledby="tab-trade" hidden>
   <div class="d-flex align-items-center mb-3">
     <h2 class="h5 mb-0">מסחר</h2>
     <button id="refresh-btn" type="button" class="btn btn-sm btn-outline-secondary ms-auto">רענון</button>
@@ -227,6 +239,7 @@
         </div>
       </section>
     </div>
+  </div>
   </div>
 </main>
 

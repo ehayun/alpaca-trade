@@ -42,8 +42,24 @@ export function hideMessage(el) {
   el.textContent = '';
 }
 
+// showTab shows the panel of a tab and hides the other panels of its tab list.
+export function showTab(tab) {
+  tab.closest('[role=tablist]').querySelectorAll('[role=tab]').forEach((t) => {
+    const on = t === tab;
+    t.classList.toggle('active', on);
+    t.setAttribute('aria-selected', on);
+    document.getElementById(t.getAttribute('aria-controls')).hidden = !on;
+  });
+}
+// One listener for all tab lists on the page (main tabs and chart/info tabs).
+document.addEventListener('click', (e) => {
+  const tab = e.target.closest('[role=tab]');
+  if (tab) showTab(tab);
+});
+
 // openSymbol loads a symbol into the chart (and so the info tabs and the order form).
 export function openSymbol(symbol) {
+  showTab(document.getElementById('tab-scan')); // rows on the trade tab open the chart tab
   const form = document.getElementById('bars-form');
   form.symbol.value = symbol;
   form.requestSubmit();
