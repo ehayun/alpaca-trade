@@ -22,6 +22,10 @@ var Main = gcmd.Command{
 			return err
 		}
 		s := g.Server()
+		// Browsers must ask again for CSS/JS (a cheap 304 when unchanged), or an update shows the old page.
+		s.BindHookHandler("/*", ghttp.HookBeforeServe, func(r *ghttp.Request) {
+			r.Response.Header().Set("Cache-Control", "no-cache")
+		})
 		s.Group("/", func(group *ghttp.RouterGroup) {
 			group.GET("/healthz", func(r *ghttp.Request) { r.Response.Write("ok") })
 			group.GET("/login", a.loginPage)
