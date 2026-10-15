@@ -1,4 +1,5 @@
 // Paper trading: account summary, order form, positions, open orders.
+// After each refresh, 'trades-changed' gives the positions and orders to the chart (chart-trades.js).
 import { api, usd, num, dateTime, showMessage, hideMessage, cell, pickable, markShown } from './common.js';
 
 const $ = (id) => document.getElementById(id);
@@ -43,6 +44,7 @@ async function loadPositions() {
   sum.className = total >= 0 ? 'text-up' : 'text-down';
   $('positions-foot').classList.toggle('d-none', positions.length === 0);
   $('positions-empty').classList.toggle('d-none', positions.length > 0);
+  return positions;
 }
 
 async function loadOrders() {
@@ -75,12 +77,14 @@ async function loadOrders() {
   }
   markShown(body, shown);
   $('orders-empty').classList.toggle('d-none', orders.length > 0);
+  return orders;
 }
 
 async function refresh() {
   hideMessage(tradeMsg);
   try {
-    await Promise.all([loadAccount(), loadPositions(), loadOrders()]);
+    const [, positions, orders] = await Promise.all([loadAccount(), loadPositions(), loadOrders()]);
+    document.dispatchEvent(new CustomEvent('trades-changed', { detail: { positions, orders } })); // chart lines
   } catch (err) {
     showMessage(tradeMsg, err.message);
   }

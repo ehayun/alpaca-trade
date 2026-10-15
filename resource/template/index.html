@@ -192,6 +192,18 @@
           <h2 id="chart-title" class="h6 text-body-secondary mb-0"></h2>
           <div id="chart-legend" class="d-flex gap-3 small ms-auto" dir="ltr" aria-label="מקרא ממוצעים נעים"></div>
         </div>
+        <div class="d-flex flex-wrap align-items-center gap-2 mb-2 small">
+          <span id="chart-click-label">לחיצה על הגרף:</span>
+          <div class="btn-group btn-group-sm" role="group" aria-labelledby="chart-click-label">
+            <input type="radio" class="btn-check" name="chart-click" id="chart-click-off" value="" checked>
+            <label class="btn btn-outline-secondary" for="chart-click-off">ללא</label>
+            <input type="radio" class="btn-check" name="chart-click" id="chart-click-buy" value="buy">
+            <label class="btn btn-outline-primary" for="chart-click-buy">קנייה</label>
+            <input type="radio" class="btn-check" name="chart-click" id="chart-click-sell" value="sell">
+            <label class="btn btn-outline-warning" for="chart-click-sell">מכירה</label>
+          </div>
+          <span class="text-body-secondary">ממלא את המחיר בטופס הפקודה כפקודת לימיט. הפקודה נשלחת רק מהטופס.</span>
+        </div>
         <div id="chart" class="chart-box" dir="ltr"></div>
       </div>
       <div id="panel-info" class="pt-3" role="tabpanel" aria-labelledby="tab-info" hidden>

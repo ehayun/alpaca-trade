@@ -36,6 +36,14 @@ func (c *ControllerV1) Orders(ctx context.Context, req *v1.OrdersReq) (res *v1.O
 	return &v1.OrdersRes{Orders: os}, nil
 }
 
+func (c *ControllerV1) Fills(ctx context.Context, req *v1.FillsReq) (res *v1.FillsRes, err error) {
+	fs, err := trade.Fills(ctx, req.Symbol, req.Days)
+	if err != nil {
+		return nil, err
+	}
+	return &v1.FillsRes{Fills: fs}, nil
+}
+
 func (c *ControllerV1) PlaceOrder(ctx context.Context, req *v1.PlaceOrderReq) (res *v1.PlaceOrderRes, err error) {
 	o, err := trade.PlaceOrder(ctx, model.OrderInput{
 		Symbol: req.Symbol, Side: req.Side, Type: req.Type, Qty: req.Qty, LimitPrice: req.LimitPrice,

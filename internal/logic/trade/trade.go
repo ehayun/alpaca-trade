@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"strings"
+	"time"
 
 	"github.com/alpacahq/alpaca-trade-api-go/v3/alpaca"
 	"github.com/gogf/gf/v2/errors/gerror"
@@ -19,6 +20,8 @@ const PaperURL = "https://paper-api.alpaca.markets"
 
 // Reads APCA_API_KEY_ID / APCA_API_SECRET_KEY from the environment.
 var client = alpaca.NewClient(alpaca.ClientOpts{BaseURL: PaperURL})
+
+var newYork = mustLoad("America/New_York")
 
 // userErr marks a Hebrew message as safe to show the user.
 func userErr(msg string) error { return gerror.NewCode(consts.CodeUser, msg) }
@@ -71,6 +74,33 @@ func OpenOrders(ctx context.Context) ([]model.Order, error) {
 		out[i] = toOrder(&os[i])
 	}
 	return out, nil
+}
+
+// Fills returns the filled orders of one symbol in the last N days, oldest first.
+// ponytail: one page of 500 closed orders; page with Until if a symbol gets more trades than that.
+func Fills(ctx context.Context, symbol string, days int) ([]model.Fill, error) {
+	os, err := client.GetOrders(alpaca.GetOrdersRequest{
+		Status: "closed", Limit: 500, Direction: "asc", Symbols: []string{strings.ToUpper(symbol)},
+		After: time.Now().AddDate(0, 0, -days),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return toFills(os), nil
+}
+
+// toFills keeps the orders that filled at least in part (a canceled order can have a partial fill).
+func toFills(os []alpaca.Order) []model.Fill {
+	out := []model.Fill{}
+	for _, o := range os {
+		if o.FilledAt == nil || o.FilledAvgPrice == nil || !o.FilledQty.IsPositive() {
+			continue
+		}
+		out = append(out, model.Fill{
+			Day: o.FilledAt.In(newYork).Format(time.DateOnly), Side: string(o.Side), Qty: o.FilledQty, Price: *o.FilledAvgPrice,
+		})
+	}
+	return out
 }
 
 func PlaceOrder(ctx context.Context, in model.OrderInput) (*model.Order, error) {
@@ -135,4 +165,12 @@ func toOrder(o *alpaca.Order) model.Order {
 		ID: o.ID, CreatedAt: o.CreatedAt, Symbol: o.Symbol, Side: string(o.Side), Type: string(o.Type),
 		Qty: o.Qty, LimitPrice: o.LimitPrice, Status: o.Status,
 	}
+}
+
+func mustLoad(name string) *time.Location {
+	loc, err := time.LoadLocation(name)
+	if err != nil {
+		panic(err)
+	}
+	return loc
 }

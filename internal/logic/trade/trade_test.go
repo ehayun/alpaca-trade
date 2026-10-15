@@ -4,9 +4,11 @@ import (
 	"errors"
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/alpacahq/alpaca-trade-api-go/v3/alpaca"
 	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/shopspring/decimal"
 
 	"alpaca-app/internal/consts"
 	"alpaca-app/internal/model"
@@ -63,5 +65,21 @@ func TestRejected(t *testing.T) {
 func TestPaperOnly(t *testing.T) {
 	if PaperURL != "https://paper-api.alpaca.markets" {
 		t.Fatal("trading must point at the paper API")
+	}
+}
+
+func TestToFills(t *testing.T) {
+	late := time.Date(2026, 3, 3, 2, 30, 0, 0, time.UTC) // 21:30 on 2 March in New York
+	price := decimal.RequireFromString("101.25")
+	got := toFills([]alpaca.Order{
+		{Side: alpaca.Buy, FilledAt: &late, FilledQty: decimal.NewFromInt(3), FilledAvgPrice: &price},
+		{Side: alpaca.Sell, Status: "canceled"}, // no fill: dropped
+		{Side: alpaca.Sell, FilledAt: &late, FilledQty: decimal.Zero, FilledAvgPrice: &price},
+	})
+	if len(got) != 1 || got[0].Day != "2026-03-02" || got[0].Side != "buy" || got[0].Qty.String() != "3" || got[0].Price.String() != "101.25" {
+		t.Fatalf("unexpected fills: %+v", got)
+	}
+	if toFills(nil) == nil {
+		t.Fatal("no fills must be [] in JSON, not null")
 	}
 }

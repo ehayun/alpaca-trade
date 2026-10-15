@@ -99,6 +99,14 @@ type Order struct {
 	Status     string           `json:"status"`
 }
 
+// Fill is a filled (or partly filled) order, drawn as a marker on the chart.
+type Fill struct {
+	Day   string          `json:"day"` // trading day, YYYY-MM-DD in New York, as Candle.Time
+	Side  string          `json:"side"`
+	Qty   decimal.Decimal `json:"qty"`
+	Price decimal.Decimal `json:"price"`
+}
+
 // OrderInput is a validated order from the user.
 type OrderInput struct {
 	Symbol     string

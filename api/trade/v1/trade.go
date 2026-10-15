@@ -28,6 +28,16 @@ type OrdersRes struct {
 	Orders []model.Order `json:"orders"`
 }
 
+type FillsReq struct {
+	g.Meta `path:"/fills" method:"get" tags:"Trade" summary:"Filled orders of one symbol in the last N days"`
+	Symbol string `json:"symbol" v:"required|regex:^[A-Za-z.]{1,10}$#יש להזין סימול מניה|סימול המניה לא תקין"`
+	Days   int    `json:"days" v:"required|between:1,3650#יש להזין מספר ימים|מספר הימים חייב להיות בין 1 ל-3650"`
+}
+
+type FillsRes struct {
+	Fills []model.Fill `json:"fills"`
+}
+
 type PlaceOrderReq struct {
 	g.Meta     `path:"/orders" method:"post" tags:"Trade" summary:"Place a day order (market or limit)"`
 	Symbol     string `json:"symbol" v:"required|regex:^[A-Za-z.]{1,10}$#יש להזין סימול מניה|סימול המניה לא תקין"`

@@ -1,6 +1,7 @@
 // Price chart: daily candles (default), bars or close-price line, with EMA 20/100/200,
 // and MACD (12, 26, 9) in a pane below, from /api/bars.
 import { api, showMessage, hideMessage } from './common.js';
+import { initTrades, setTradesSeries, loadTrades } from './chart-trades.js';
 
 const LWC = window.LightweightCharts;
 const form = document.getElementById('bars-form');
@@ -25,6 +26,8 @@ const chart = LWC.createChart(box, {
   timeScale: { borderVisible: false },
   rightPriceScale: { borderVisible: false },
 });
+
+initTrades(chart, dark);
 
 let candles = [];
 let series = null; // the price series; the only one replaced on redraw
@@ -107,6 +110,7 @@ function draw() {
     });
     series.setData(candles);
   }
+  setTradesSeries(series, candles);
   // Show all candles plus an empty margin after the last one (5% of the range, at least 2 bars).
   const n = candles.length;
   chart.timeScale().setVisibleLogicalRange({ from: -0.5, to: n - 0.5 + Math.max(2, Math.round(n * 0.05)) });
@@ -118,6 +122,7 @@ async function load(symbol, days) {
   try {
     const data = await api(`/api/bars?symbol=${encodeURIComponent(symbol)}&days=${encodeURIComponent(days)}`);
     candles = data.candles;
+    loadTrades(data.symbol, days);
     setIndicators(data);
     const sym = document.createElement('bdi');
     sym.textContent = data.symbol;
