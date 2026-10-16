@@ -134,8 +134,9 @@ async function cancelOrder(id, btn) {
 }
 
 allBox.addEventListener('change', () => {
+  const on = allBox.checked; // read once: syncSelection() changes allBox during the loop
   for (const box of $('positions-body').querySelectorAll('input[type=checkbox]')) {
-    box.checked = allBox.checked;
+    box.checked = on;
     box.dispatchEvent(new Event('change'));
   }
 });
