@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;700&display=swap">
-  <link rel="stylesheet" href="/css/app.css?ver=v-4.4.5">
+  <link rel="stylesheet" href="/css/app.css?ver=v-4.4.6">
   <script>
     // Follow the OS light/dark setting.
     if (matchMedia('(prefers-color-scheme: dark)').matches) document.documentElement.dataset.bsTheme = 'dark';
@@ -77,11 +77,12 @@
           <div id="scan-table" class="scan-list" hidden>
             <table class="table table-sm table-hover align-middle mb-0">
               <thead>
-                <tr><th scope="col">סימול</th><th scope="col" class="text-end">מחיר</th><th scope="col" class="text-end">פער</th></tr>
+                <tr><th scope="col"><input id="scan-all" class="form-check-input" type="checkbox" aria-label="בחר הכל"></th><th scope="col">סימול</th><th scope="col">כמות</th><th scope="col"><span class="visually-hidden">קנייה</span></th><th scope="col" class="text-end">מחיר</th><th scope="col" class="text-end">פער</th></tr>
               </thead>
               <tbody id="scan-list"></tbody>
             </table>
           </div>
+          <button id="scan-buy-selected" type="button" class="btn btn-sm btn-outline-success mt-2" hidden disabled>קנה נבחרות במחיר שוק</button>
         </div>
         <div id="panel-positions" role="tabpanel" aria-labelledby="tab-positions" hidden>
           <h2 class="h6">החשבון שלי</h2>

@@ -28,6 +28,9 @@
   .scan-list { max-height: 240px; } /* stacked above the chart: keep the chart in reach */
 }
 
+.scan-qty { width: 5rem; } /* buy quantity in the scanner rows */
+#scan-msg, #trade-msg { white-space: pre-line; } /* one line per order result */
+
 /* Claude returns one point per line. */
 .summary-text { white-space: pre-line; }
 

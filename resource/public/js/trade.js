@@ -196,4 +196,5 @@ document.addEventListener('symbol-loaded', (e) => {
 });
 
 $('refresh-btn').addEventListener('click', refresh);
+document.addEventListener('orders-changed', refresh); // orders sent from the scanner
 refresh();
