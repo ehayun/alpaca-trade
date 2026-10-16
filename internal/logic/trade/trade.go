@@ -120,6 +120,17 @@ func CancelOrder(ctx context.Context, id string) error {
 	return rejected(client.CancelOrder(id), "לא ניתן לבטל את הפקודה")
 }
 
+// ClosePosition closes the whole position with a market order (Alpaca sells a long, buys back a short).
+func ClosePosition(ctx context.Context, symbol string) (*model.Order, error) {
+	symbol = strings.ToUpper(symbol)
+	o, err := client.ClosePosition(symbol, alpaca.ClosePositionRequest{})
+	if err != nil {
+		return nil, rejected(err, "לא ניתן לסגור את הפוזיציה "+symbol)
+	}
+	res := toOrder(o)
+	return &res, nil
+}
+
 // BuildOrder turns user input into an SDK order request. Day orders only.
 func BuildOrder(in model.OrderInput) (alpaca.PlaceOrderRequest, error) {
 	qty, err := decimal.NewFromString(strings.TrimSpace(in.Qty))

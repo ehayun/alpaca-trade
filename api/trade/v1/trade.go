@@ -55,3 +55,10 @@ type CancelOrderReq struct {
 }
 
 type CancelOrderRes struct{}
+
+type ClosePositionReq struct {
+	g.Meta `path:"/positions/{symbol}" method:"delete" tags:"Trade" summary:"Close a whole position at market price"`
+	Symbol string `json:"symbol" in:"path" v:"required|regex:^[A-Za-z.]{1,10}$#יש להזין סימול מניה|סימול המניה לא תקין"`
+}
+
+type ClosePositionRes model.Order

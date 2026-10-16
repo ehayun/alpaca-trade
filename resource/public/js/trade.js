@@ -10,6 +10,19 @@ const tradeMsg = $('trade-msg');
 const SIDE = { buy: 'קנייה', sell: 'מכירה' };
 const TYPE = { market: 'שוק', limit: 'לימיט' };
 let shown = ''; // symbol on the chart, highlighted in the tables
+const selected = new Set(); // position symbols checked for "close selected"
+const allBox = $('positions-all');
+const closeBtn = $('close-selected');
+
+// Sync the "select all" box and the close button with the checked rows.
+function syncSelection() {
+  const boxes = [...$('positions-body').querySelectorAll('input[type=checkbox]')];
+  const n = boxes.filter((b) => b.checked).length;
+  allBox.checked = n > 0 && n === boxes.length;
+  allBox.indeterminate = n > 0 && n < boxes.length;
+  closeBtn.disabled = n === 0;
+  closeBtn.textContent = n ? `סגור ${n} נבחרות במחיר שוק` : 'סגור נבחרות במחיר שוק';
+}
 
 async function loadAccount() {
   const a = await api('/api/account');
@@ -23,12 +36,28 @@ async function loadPositions() {
   const body = $('positions-body');
   body.replaceChildren();
   let total = 0;
+  const open = new Set(positions.map((p) => p.symbol));
+  for (const s of selected) if (!open.has(s)) selected.delete(s); // drop closed positions
   for (const p of positions) {
     const pl = Number(p.unrealizedPl);
     total += pl;
     const tr = document.createElement('tr');
     pickable(tr, p.symbol);
+    const boxCell = document.createElement('td');
+    const box = document.createElement('input');
+    box.type = 'checkbox';
+    box.className = 'form-check-input';
+    box.checked = selected.has(p.symbol);
+    box.setAttribute('aria-label', `בחר ${p.symbol}`);
+    box.addEventListener('click', (e) => e.stopPropagation()); // select only, do not open the symbol
+    box.addEventListener('change', () => {
+      if (box.checked) selected.add(p.symbol);
+      else selected.delete(p.symbol);
+      syncSelection();
+    });
+    boxCell.append(box);
     tr.append(
+      boxCell,
       cell(p.symbol, { ltr: true }),
       cell(num(p.qty), { ltr: true }),
       cell(usd(p.avgEntryPrice), { ltr: true }),
@@ -44,6 +73,9 @@ async function loadPositions() {
   sum.className = total >= 0 ? 'text-up' : 'text-down';
   $('positions-foot').classList.toggle('d-none', positions.length === 0);
   $('positions-empty').classList.toggle('d-none', positions.length > 0);
+  closeBtn.classList.toggle('d-none', positions.length === 0);
+  allBox.disabled = positions.length === 0;
+  syncSelection();
   return positions;
 }
 
@@ -100,6 +132,27 @@ async function cancelOrder(id, btn) {
     btn.disabled = false;
   }
 }
+
+allBox.addEventListener('change', () => {
+  for (const box of $('positions-body').querySelectorAll('input[type=checkbox]')) {
+    box.checked = allBox.checked;
+    box.dispatchEvent(new Event('change'));
+  }
+});
+
+// Close each selected position with a market order. One failure does not stop the others.
+closeBtn.addEventListener('click', async () => {
+  const symbols = [...selected];
+  if (!symbols.length || !confirm(`לסגור במחיר שוק: ${symbols.join(', ')}?`)) return;
+  hideMessage(tradeMsg);
+  closeBtn.disabled = true;
+  const results = await Promise.allSettled(
+    symbols.map((s) => api(`/api/positions/${encodeURIComponent(s)}`, { method: 'DELETE' })),
+  );
+  const errors = results.filter((r) => r.status === 'rejected').map((r) => r.reason.message);
+  await refresh();
+  if (errors.length) showMessage(tradeMsg, errors.join('\n'));
+});
 
 orderForm.type.addEventListener('change', () => {
   const limit = orderForm.type.value === 'limit';

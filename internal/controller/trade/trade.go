@@ -60,3 +60,11 @@ func (c *ControllerV1) CancelOrder(ctx context.Context, req *v1.CancelOrderReq) 
 	}
 	return &v1.CancelOrderRes{}, nil
 }
+
+func (c *ControllerV1) ClosePosition(ctx context.Context, req *v1.ClosePositionReq) (res *v1.ClosePositionRes, err error) {
+	o, err := trade.ClosePosition(ctx, req.Symbol)
+	if err != nil {
+		return nil, err
+	}
+	return (*v1.ClosePositionRes)(o), nil
+}

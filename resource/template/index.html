@@ -93,13 +93,14 @@
           <h2 class="h6 mt-4">פוזיציות פתוחות</h2>
             <div class="table-responsive scan-list">
               <table class="table table-sm align-middle mb-0">
-                <thead><tr><th>סימול</th><th>כמות</th><th>מחיר כניסה</th><th>מחיר נוכחי</th><th>שווי</th><th>רווח/הפסד</th></tr></thead>
+                <thead><tr><th><input id="positions-all" class="form-check-input" type="checkbox" aria-label="בחר הכל"></th><th>סימול</th><th>כמות</th><th>מחיר כניסה</th><th>מחיר נוכחי</th><th>שווי</th><th>רווח/הפסד</th></tr></thead>
                 <tbody id="positions-body"></tbody>
                 <tfoot id="positions-foot" class="d-none">
-                  <tr class="fw-bold"><td colspan="5">סה״כ רווח/הפסד</td><td><bdi id="positions-total"></bdi></td></tr>
+                  <tr class="fw-bold"><td colspan="6">סה״כ רווח/הפסד</td><td><bdi id="positions-total"></bdi></td></tr>
                 </tfoot>
               </table>
             </div>
+            <button id="close-selected" type="button" class="btn btn-sm btn-outline-danger mt-2 d-none" disabled>סגור נבחרות במחיר שוק</button>
             <p id="positions-empty" class="text-body-secondary mb-0 mt-2 d-none">אין פוזיציות פתוחות.</p>
         </div>
         <div id="panel-order" role="tabpanel" aria-labelledby="tab-order" hidden>
