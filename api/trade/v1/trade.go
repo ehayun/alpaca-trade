@@ -38,6 +38,14 @@ type FillsRes struct {
 	Fills []model.Fill `json:"fills"`
 }
 
+type ClosedReq struct {
+	g.Meta `path:"/closed" method:"get" tags:"Trade" summary:"Stocks bought and sold in full, with no open position"`
+}
+
+type ClosedRes struct {
+	Closed []model.Closed `json:"closed"`
+}
+
 type PlaceOrderReq struct {
 	g.Meta     `path:"/orders" method:"post" tags:"Trade" summary:"Place a day order (market or limit)"`
 	Symbol     string `json:"symbol" v:"required|regex:^[A-Za-z.]{1,10}$#יש להזין סימול מניה|סימול המניה לא תקין"`

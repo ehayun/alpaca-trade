@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;700&display=swap">
-  <link rel="stylesheet" href="/css/app.css?ver=v-4.4.6">
+  <link rel="stylesheet" href="/css/app.css?ver=v-4.4.7">
   <script>
     // Follow the OS light/dark setting.
     if (matchMedia('(prefers-color-scheme: dark)').matches) document.documentElement.dataset.bsTheme = 'dark';
@@ -43,6 +43,9 @@
           </li>
           <li class="nav-item" role="presentation">
             <button id="tab-orders" class="nav-link" type="button" role="tab" aria-controls="panel-orders" aria-selected="false">פקודות</button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button id="tab-closed" class="nav-link" type="button" role="tab" aria-controls="panel-closed" aria-selected="false">מניות עבר</button>
           </li>
         </ul>
         <div id="panel-scan" role="tabpanel" aria-labelledby="tab-scan">
@@ -150,6 +153,20 @@
             </div>
             <p id="orders-empty" class="text-body-secondary mb-0 mt-2 d-none">אין פקודות פתוחות.</p>
         </div>
+        <div id="panel-closed" role="tabpanel" aria-labelledby="tab-closed" hidden>
+          <h2 class="h6">מניות שנקנו ונמכרו במלואן</h2>
+            <div id="closed-msg" class="alert d-none" role="alert"></div>
+            <div class="table-responsive scan-list">
+              <table class="table table-sm align-middle mb-0">
+                <thead><tr><th>סימול</th><th>כמות</th><th>קנייה ממוצעת</th><th>מכירה ממוצעת</th><th>רווח/הפסד</th><th>תאריך סגירה</th></tr></thead>
+                <tbody id="closed-body"></tbody>
+                <tfoot id="closed-foot" class="d-none">
+                  <tr class="fw-bold"><td colspan="4">סה״כ רווח/הפסד</td><td><bdi id="closed-total"></bdi></td><td></td></tr>
+                </tfoot>
+              </table>
+            </div>
+            <p id="closed-empty" class="text-body-secondary mb-0 mt-2 d-none">אין מניות עבר.</p>
+        </div>
       </div>
     </section>
   </aside>
@@ -240,6 +257,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/lightweight-charts@5.2.1/dist/lightweight-charts.standalone.production.js" integrity="sha384-KkYqTZlM13Zya6fVUF3IGCBOQ1ehFeJVVgxaVvD/0MebineF9EI8Jkd3NnWNChqN" crossorigin="anonymous"></script>
 <script type="module" src="/js/chart.js"></script>
+<script type="module" src="/js/closed.js"></script>
 <script type="module" src="/js/trade.js"></script>
 <script type="module" src="/js/info.js"></script>
 <script type="module" src="/js/scanner.js"></script>

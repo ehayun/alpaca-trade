@@ -83,3 +83,38 @@ func TestToFills(t *testing.T) {
 		t.Fatal("no fills must be [] in JSON, not null")
 	}
 }
+
+func TestToClosed(t *testing.T) {
+	day1 := time.Date(2026, 3, 2, 15, 0, 0, 0, time.UTC)
+	day2 := time.Date(2026, 3, 5, 15, 0, 0, 0, time.UTC)
+	p := func(v string) *decimal.Decimal { d := decimal.RequireFromString(v); return &d }
+	fill := func(sym string, side alpaca.Side, at *time.Time, qty int64, price string) alpaca.Order {
+		return alpaca.Order{Symbol: sym, Side: side, FilledAt: at, FilledQty: decimal.NewFromInt(qty), FilledAvgPrice: p(price)}
+	}
+	got := toClosed([]alpaca.Order{
+		fill("AAPL", alpaca.Sell, &day2, 3, "110"),
+		fill("AAPL", alpaca.Buy, &day1, 1, "100"),
+		fill("AAPL", alpaca.Buy, &day1, 2, "103"),
+		fill("MSFT", alpaca.Sell, &day1, 1, "90"),
+		fill("MSFT", alpaca.Buy, &day1, 1, "100"),
+		fill("NVDA", alpaca.Buy, &day1, 2, "50"), // only part sold: left out
+		fill("NVDA", alpaca.Sell, &day1, 1, "55"),
+		fill("TSLA", alpaca.Buy, &day1, 1, "10"), // open position: left out
+		fill("TSLA", alpaca.Sell, &day1, 1, "12"),
+		{Symbol: "AMD", Side: alpaca.Buy, Status: "canceled"}, // no fill
+	}, map[string]bool{"TSLA": true})
+	if len(got) != 2 {
+		t.Fatalf("want AAPL and MSFT, got %+v", got)
+	}
+	a, m := got[0], got[1]
+	if a.Symbol != "AAPL" || a.Day != "2026-03-05" || a.Qty.String() != "3" || a.AvgBuy.String() != "102" ||
+		a.AvgSell.String() != "110" || a.RealizedPL.String() != "24" {
+		t.Fatalf("AAPL: %+v", a)
+	}
+	if m.Symbol != "MSFT" || m.RealizedPL.String() != "-10" {
+		t.Fatalf("MSFT: %+v", m)
+	}
+	if toClosed(nil, nil) == nil {
+		t.Fatal("no trades must be [] in JSON, not null")
+	}
+}

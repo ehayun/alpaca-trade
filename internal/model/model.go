@@ -107,6 +107,16 @@ type Fill struct {
 	Price decimal.Decimal `json:"price"`
 }
 
+// Closed is a stock that was bought and sold in full, with no open position now.
+type Closed struct {
+	Symbol     string          `json:"symbol"`
+	Qty        decimal.Decimal `json:"qty"`
+	AvgBuy     decimal.Decimal `json:"avgBuy"`
+	AvgSell    decimal.Decimal `json:"avgSell"`
+	RealizedPL decimal.Decimal `json:"realizedPl"`
+	Day        string          `json:"day"` // last fill, YYYY-MM-DD in New York
+}
+
 // OrderInput is a validated order from the user.
 type OrderInput struct {
 	Symbol     string

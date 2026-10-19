@@ -4,6 +4,7 @@ package trade
 import (
 	"context"
 	"errors"
+	"slices"
 	"strings"
 	"time"
 
@@ -100,6 +101,71 @@ func toFills(os []alpaca.Order) []model.Fill {
 			Day: o.FilledAt.In(newYork).Format(time.DateOnly), Side: string(o.Side), Qty: o.FilledQty, Price: *o.FilledAvgPrice,
 		})
 	}
+	return out
+}
+
+// Closed returns the stocks with no open position whose filled buys and sells are equal, last closed first.
+// ponytail: one page of the newest 500 closed orders; page with Until if the account gets more trades than that.
+func Closed(ctx context.Context) ([]model.Closed, error) {
+	os, err := client.GetOrders(alpaca.GetOrdersRequest{Status: "closed", Limit: 500, Direction: "desc"})
+	if err != nil {
+		return nil, err
+	}
+	ps, err := client.GetPositions()
+	if err != nil {
+		return nil, err
+	}
+	open := map[string]bool{}
+	for _, p := range ps {
+		open[p.Symbol] = true
+	}
+	return toClosed(os, open), nil
+}
+
+// toClosed groups the fills by symbol. A symbol whose buys and sells differ (still open, or older
+// fills out of the page) has no true realized P/L, so it is left out.
+func toClosed(os []alpaca.Order, open map[string]bool) []model.Closed {
+	type sums struct {
+		buyQty, buyCost, sellQty, sellCost decimal.Decimal
+		day                                string
+	}
+	bySymbol := map[string]*sums{}
+	for _, o := range os {
+		if open[o.Symbol] || o.FilledAt == nil || o.FilledAvgPrice == nil || !o.FilledQty.IsPositive() {
+			continue
+		}
+		s := bySymbol[o.Symbol]
+		if s == nil {
+			s = &sums{}
+			bySymbol[o.Symbol] = s
+		}
+		if day := o.FilledAt.In(newYork).Format(time.DateOnly); day > s.day {
+			s.day = day
+		}
+		cost := o.FilledQty.Mul(*o.FilledAvgPrice)
+		if o.Side == alpaca.Buy {
+			s.buyQty, s.buyCost = s.buyQty.Add(o.FilledQty), s.buyCost.Add(cost)
+		} else {
+			s.sellQty, s.sellCost = s.sellQty.Add(o.FilledQty), s.sellCost.Add(cost)
+		}
+	}
+	out := []model.Closed{}
+	for sym, s := range bySymbol {
+		if !s.buyQty.IsPositive() || !s.buyQty.Equal(s.sellQty) {
+			continue
+		}
+		out = append(out, model.Closed{
+			Symbol: sym, Qty: s.buyQty, Day: s.day,
+			AvgBuy: s.buyCost.Div(s.buyQty).Round(4), AvgSell: s.sellCost.Div(s.sellQty).Round(4),
+			RealizedPL: s.sellCost.Sub(s.buyCost),
+		})
+	}
+	slices.SortFunc(out, func(a, b model.Closed) int {
+		if c := strings.Compare(b.Day, a.Day); c != 0 {
+			return c
+		}
+		return strings.Compare(a.Symbol, b.Symbol)
+	})
 	return out
 }
 
