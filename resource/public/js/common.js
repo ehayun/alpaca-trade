@@ -33,9 +33,19 @@ export const dateTime = (s) => dateTimeFmt.format(new Date(s));
 
 // showMessage puts text into a Bootstrap alert element and reveals it.
 export function showMessage(el, text, kind = 'danger') {
-  el.className = `alert alert-${kind}`;
+  el.className = `alert alert-${kind} alert-dismissible`;
   el.textContent = text;
+  // Bootstrap's JS is not loaded, so the close button gets its own handler.
+  const close = document.createElement('button');
+  close.type = 'button';
+  close.className = 'btn-close';
+  close.setAttribute('aria-label', 'סגירה');
+  close.addEventListener('click', () => hideMessage(el));
+  el.append(close);
+  clearTimeout(hideTimers.get(el)); // a new message gets the full 10 seconds
+  hideTimers.set(el, setTimeout(() => hideMessage(el), 10_000));
 }
+const hideTimers = new WeakMap(); // message element -> auto-hide timer
 
 export function hideMessage(el) {
   el.className = 'alert d-none';
@@ -80,6 +90,21 @@ export function pickable(tr, symbol) {
     }
   });
 }
+
+// Up/Down arrows move between the rows of a list; the chart follows when the key stops (no request per row).
+let arrowTimer;
+document.addEventListener('keydown', (e) => {
+  const tr = e.target;
+  if ((e.key !== 'ArrowDown' && e.key !== 'ArrowUp') || !tr.classList?.contains('row-pick')) return;
+  let next = tr;
+  do next = e.key === 'ArrowDown' ? next.nextElementSibling : next.previousElementSibling;
+  while (next && next.hidden); // skip rows the search filter hides
+  e.preventDefault(); // no page scroll
+  if (!next) return;
+  next.focus();
+  clearTimeout(arrowTimer);
+  arrowTimer = setTimeout(() => openSymbol(next.dataset.symbol), 250);
+});
 
 // markShown highlights the rows of the symbol that is on the chart.
 export function markShown(body, symbol) {

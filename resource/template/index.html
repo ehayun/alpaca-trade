@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;700&display=swap">
-  <link rel="stylesheet" href="/css/app.css?ver=v-4.4.11">
+  <link rel="stylesheet" href="/css/app.css?ver=v-4.4.15">
   <script>
     // Follow the OS light/dark setting.
     if (matchMedia('(prefers-color-scheme: dark)').matches) document.documentElement.dataset.bsTheme = 'dark';
@@ -46,6 +46,9 @@
           </li>
           <li class="nav-item" role="presentation">
             <button id="tab-closed" class="nav-link" type="button" role="tab" aria-controls="panel-closed" aria-selected="false">מניות עבר</button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button id="tab-all" class="nav-link" type="button" role="tab" aria-controls="panel-all" aria-selected="false">הכל</button>
           </li>
         </ul>
         <div id="panel-scan" role="tabpanel" aria-labelledby="tab-scan">
@@ -167,6 +170,18 @@
             </div>
             <p id="closed-empty" class="text-body-secondary mb-0 mt-2 d-none">אין מניות עבר.</p>
         </div>
+        <div id="panel-all" role="tabpanel" aria-labelledby="tab-all" hidden>
+          <h2 class="h6">כל המניות (<bdi>S&amp;P 500</bdi>, <bdi>Nasdaq-100</bdi>, <bdi>Dow 30</bdi>)</h2>
+            <input id="all-search" type="search" class="form-control form-control-sm mb-2" dir="ltr" placeholder="AAPL" maxlength="10" aria-label="חיפוש סימול">
+            <div id="all-msg" class="alert d-none" role="alert"></div>
+            <div class="table-responsive scan-list">
+              <table class="table table-sm align-middle mb-0">
+                <thead><tr><th><span class="visually-hidden">קנייה</span></th><th>סימול</th><th>כמות</th></tr></thead>
+                <tbody id="all-body"></tbody>
+              </table>
+            </div>
+            <p id="all-empty" class="text-body-secondary mb-0 mt-2 d-none">לא נמצאו מניות.</p>
+        </div>
       </div>
     </section>
   </aside>
@@ -256,10 +271,11 @@
 </main>
 
 <script src="https://cdn.jsdelivr.net/npm/lightweight-charts@5.2.1/dist/lightweight-charts.standalone.production.js" integrity="sha384-KkYqTZlM13Zya6fVUF3IGCBOQ1ehFeJVVgxaVvD/0MebineF9EI8Jkd3NnWNChqN" crossorigin="anonymous"></script>
-<script type="module" src="/js/chart.js?ver=v-4.4.11"></script>
-<script type="module" src="/js/closed.js?ver=v-4.4.11"></script>
-<script type="module" src="/js/trade.js?ver=v-4.4.11"></script>
-<script type="module" src="/js/info.js?ver=v-4.4.11"></script>
-<script type="module" src="/js/scanner.js?ver=v-4.4.11"></script>
+<script type="module" src="/js/chart.js?ver=v-4.4.15"></script>
+<script type="module" src="/js/closed.js?ver=v-4.4.15"></script>
+<script type="module" src="/js/all.js?ver=v-4.4.15"></script>
+<script type="module" src="/js/trade.js?ver=v-4.4.15"></script>
+<script type="module" src="/js/info.js?ver=v-4.4.15"></script>
+<script type="module" src="/js/scanner.js?ver=v-4.4.15"></script>
 </body>
 </html>

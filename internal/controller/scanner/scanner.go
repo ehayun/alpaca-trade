@@ -42,6 +42,10 @@ func resultFile(ctx context.Context) string {
 	return g.Cfg().MustGet(ctx, "scanner.resultFile", "data/scan.json").String()
 }
 
+func (c *ControllerV1) Symbols(ctx context.Context, req *v1.SymbolsReq) (res *v1.SymbolsRes, err error) {
+	return &v1.SymbolsRes{Symbols: scanner.Symbols()}, nil
+}
+
 func (c *ControllerV1) Status(ctx context.Context, req *v1.StatusReq) (res *v1.StatusRes, err error) {
 	s := scanner.Status()
 	return &s, nil

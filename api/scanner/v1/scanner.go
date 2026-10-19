@@ -25,3 +25,11 @@ type SavedReq struct {
 }
 
 type SavedRes = model.ScanStatus
+
+type SymbolsReq struct {
+	g.Meta `path:"/symbols" method:"get" tags:"Scanner" summary:"All symbols of the S&P 500, Nasdaq-100 and Dow 30, sorted"`
+}
+
+type SymbolsRes struct {
+	Symbols []string `json:"symbols"`
+}
