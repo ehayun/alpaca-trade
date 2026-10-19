@@ -9,3 +9,6 @@
 - **Every change increases the version.** Bump `?ver=v-X.Y.Z` in `resource/template/index.html` (last number +1)
   in every change set, not only when `app.css` changes.
 - **Research = read the docs.** When asked to write guidance for a framework (GoFrame), fetch its official docs. Don't install its CLI or scaffold a demo. Install tools only during a real build, after the user agrees.
+- **Check the server before advice about caching.** I said "do a hard refresh" and suggested `Cache-Control: no-cache`
+  three times, but `internal/cmd/cmd.go` already sends it for every file. Before advice about server behavior,
+  grep the server setup (hooks, middleware) and check the real response headers with curl.
