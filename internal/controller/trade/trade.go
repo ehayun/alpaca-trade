@@ -76,3 +76,23 @@ func (c *ControllerV1) ClosePosition(ctx context.Context, req *v1.ClosePositionR
 	}
 	return (*v1.ClosePositionRes)(o), nil
 }
+
+func (c *ControllerV1) Watchlist(ctx context.Context, req *v1.WatchlistReq) (res *v1.WatchlistRes, err error) {
+	symbols, err := trade.Watchlist(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return &v1.WatchlistRes{Symbols: symbols}, nil
+}
+
+func (c *ControllerV1) WatchlistAdd(ctx context.Context, req *v1.WatchlistAddReq) (res *v1.WatchlistAddRes, err error) {
+	symbols, err := trade.WatchlistAdd(ctx, req.Symbol)
+	if err != nil {
+		return nil, err
+	}
+	return &v1.WatchlistAddRes{Symbols: symbols}, nil
+}
+
+func (c *ControllerV1) WatchlistRemove(ctx context.Context, req *v1.WatchlistRemoveReq) (res *v1.WatchlistRemoveRes, err error) {
+	return &v1.WatchlistRemoveRes{}, trade.WatchlistRemove(ctx, req.Symbol)
+}

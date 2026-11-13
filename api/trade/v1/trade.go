@@ -70,3 +70,27 @@ type ClosePositionReq struct {
 }
 
 type ClosePositionRes model.Order
+
+type WatchlistReq struct {
+	g.Meta `path:"/watchlist" method:"get" tags:"Trade" summary:"Symbols of the user's watchlist"`
+}
+
+type WatchlistRes struct {
+	Symbols []string `json:"symbols"`
+}
+
+type WatchlistAddReq struct {
+	g.Meta `path:"/watchlist" method:"post" tags:"Trade" summary:"Add a symbol to the watchlist"`
+	Symbol string `json:"symbol" v:"required|regex:^[A-Za-z.]{1,10}$#יש להזין סימול מניה|סימול המניה לא תקין"`
+}
+
+type WatchlistAddRes struct {
+	Symbols []string `json:"symbols"`
+}
+
+type WatchlistRemoveReq struct {
+	g.Meta `path:"/watchlist/{symbol}" method:"delete" tags:"Trade" summary:"Remove a symbol from the watchlist"`
+	Symbol string `json:"symbol" in:"path" v:"required|regex:^[A-Za-z.]{1,10}$#יש להזין סימול מניה|סימול המניה לא תקין"`
+}
+
+type WatchlistRemoveRes struct{}
