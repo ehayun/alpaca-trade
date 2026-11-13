@@ -133,6 +133,10 @@ export function cell(text, { ltr = false, cls = '' } = {}) {
 // Favorites: a star on each symbol row of each list. The symbols are kept in an Alpaca watchlist.
 const favorites = new Set();
 const favError = (err) => showMessage(document.getElementById('trade-msg'), err.message);
+const favChanged = () => document.dispatchEvent(new Event('favorites-changed')); // fav.js draws the favorites tab
+
+// favoriteSymbols returns the favorite symbols, in the order they were marked.
+export const favoriteSymbols = () => [...favorites];
 
 function paintStar(btn) {
   const on = favorites.has(btn.dataset.fav);
@@ -151,6 +155,7 @@ function paintStars(symbol) {
 api('/api/favorites').then(({ symbols }) => {
   symbols.forEach((s) => favorites.add(s));
   paintStars();
+  favChanged();
 }).catch(favError);
 
 // favStar builds the star button that marks a symbol as favorite, or removes the mark.
@@ -171,6 +176,7 @@ function favStar(symbol) {
       if (on) favorites.delete(symbol);
       else favorites.add(symbol);
       paintStars(symbol);
+      favChanged();
     } catch (err) {
       favError(err);
     } finally {

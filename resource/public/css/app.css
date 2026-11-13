@@ -50,3 +50,4 @@
 
 /* Favorite star in the symbol cell of each list row. */
 .fav-btn { padding: 0; line-height: 1; text-decoration: none; color: var(--bs-warning); }
+.fav-btn[aria-pressed="false"] { color: var(--bs-secondary-color); } /* not favorite: gray */
