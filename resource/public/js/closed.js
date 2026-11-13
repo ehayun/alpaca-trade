@@ -1,5 +1,5 @@
 // Past stocks: bought and sold in full, with realized profit/loss. Reloads after each trade refresh.
-import { api, usd, num, showMessage, hideMessage, cell, pickable, markShown } from './common.js';
+import { api, usd, num, showMessage, hideMessage, cell, symbolCell, pickable, markShown } from './common.js';
 
 const $ = (id) => document.getElementById(id);
 const body = $('closed-body');
@@ -18,10 +18,10 @@ async function loadClosed() {
       total += pl;
       const tr = document.createElement('tr');
       pickable(tr, c.symbol);
-      const symbolCell = cell(c.symbol, { ltr: true });
-      symbolCell.prepend(buyButton(c), ' ');
+      const symCell = symbolCell(c.symbol);
+      symCell.prepend(buyButton(c), ' ');
       tr.append(
-        symbolCell,
+        symCell,
         cell(num(c.qty), { ltr: true }),
         cell(usd(c.avgBuy), { ltr: true }),
         cell(usd(c.avgSell), { ltr: true }),

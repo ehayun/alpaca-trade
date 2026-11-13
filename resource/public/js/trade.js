@@ -1,6 +1,6 @@
 // Paper trading: account summary, order form, positions, open orders.
 // After each refresh, 'trades-changed' gives the positions and orders to the chart (chart-trades.js).
-import { api, usd, num, dateTime, showMessage, hideMessage, cell, pickable, markShown } from './common.js';
+import { api, usd, num, dateTime, showMessage, hideMessage, cell, symbolCell, pickable, markShown } from './common.js';
 
 const $ = (id) => document.getElementById(id);
 const orderForm = $('order-form');
@@ -58,7 +58,7 @@ async function loadPositions() {
     boxCell.append(box);
     tr.append(
       boxCell,
-      cell(p.symbol, { ltr: true }),
+      symbolCell(p.symbol),
       cell(num(p.qty), { ltr: true }),
       cell(usd(p.avgEntryPrice), { ltr: true }),
       cell(usd(p.currentPrice), { ltr: true }),
@@ -97,7 +97,7 @@ async function loadOrders() {
     btnCell.append(btn);
     tr.append(
       cell(dateTime(o.createdAt)),
-      cell(o.symbol, { ltr: true }),
+      symbolCell(o.symbol),
       cell(SIDE[o.side] || o.side),
       cell(TYPE[o.type] || o.type),
       cell(num(o.qty), { ltr: true }),

@@ -1,7 +1,7 @@
 // EMA scanner side panel: choose the spread limit and whether the price must be close too, start a scan,
 // show progress, list the matches with live prices; a click loads the chart and info.
 // On open, a saved scan (if any) is offered instead of a new scan.
-import { api, showMessage, hideMessage, num, usd, dateTime, pickable, markShown } from './common.js';
+import { api, showMessage, hideMessage, num, usd, dateTime, pickable, symbolCell, markShown } from './common.js';
 
 const $ = (id) => document.getElementById(id);
 const btn = $('scan-btn');
@@ -80,7 +80,7 @@ function row(m, withPrice) {
   };
   tr.append(
     wrap(box),
-    td(m.symbol, 'fw-medium'),
+    symbolCell(m.symbol, 'fw-medium'),
     wrap(qty),
     wrap(buy),
     td(usd(m.close), 'text-end scan-price'), // close at scan time until the live price arrives

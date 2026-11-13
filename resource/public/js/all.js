@@ -1,6 +1,6 @@
 // All index symbols (S&P 500, Nasdaq-100, Dow 30) with a search box and a market buy on each row.
 // The list loads the first time the tab opens.
-import { api, num, showMessage, hideMessage, cell, pickable, markShown } from './common.js';
+import { api, num, showMessage, hideMessage, symbolCell, pickable, markShown } from './common.js';
 
 const $ = (id) => document.getElementById(id);
 const body = $('all-body');
@@ -51,7 +51,7 @@ function row(symbol) {
   btnCell.append(btn);
   const qtyCell = document.createElement('td');
   qtyCell.append(qty);
-  tr.append(btnCell, cell(symbol, { ltr: true }), qtyCell);
+  tr.append(btnCell, symbolCell(symbol), qtyCell);
   return tr;
 }
 

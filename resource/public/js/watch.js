@@ -1,5 +1,5 @@
 // Watchlist: the user's own symbols, kept in an Alpaca watchlist. The list loads the first time the tab opens.
-import { api, showMessage, hideMessage, cell, pickable, markShown } from './common.js';
+import { api, showMessage, hideMessage, symbolCell, pickable, markShown } from './common.js';
 
 const $ = (id) => document.getElementById(id);
 const body = $('watch-body');
@@ -40,7 +40,7 @@ function row(symbol) {
   const btnCell = document.createElement('td');
   btnCell.className = 'text-end';
   btnCell.append(btn);
-  tr.append(cell(symbol, { ltr: true }), btnCell);
+  tr.append(symbolCell(symbol), btnCell);
   return tr;
 }
 

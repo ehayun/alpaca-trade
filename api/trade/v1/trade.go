@@ -94,3 +94,25 @@ type WatchlistRemoveReq struct {
 }
 
 type WatchlistRemoveRes struct{}
+
+type FavoritesReq struct {
+	g.Meta `path:"/favorites" method:"get" tags:"Trade" summary:"Symbols the user marked as favorite"`
+}
+
+type FavoritesRes struct {
+	Symbols []string `json:"symbols"`
+}
+
+type FavoriteAddReq struct {
+	g.Meta `path:"/favorites" method:"post" tags:"Trade" summary:"Mark a symbol as favorite"`
+	Symbol string `json:"symbol" v:"required|regex:^[A-Za-z.]{1,10}$#יש להזין סימול מניה|סימול המניה לא תקין"`
+}
+
+type FavoriteAddRes struct{}
+
+type FavoriteRemoveReq struct {
+	g.Meta `path:"/favorites/{symbol}" method:"delete" tags:"Trade" summary:"Remove the favorite mark of a symbol"`
+	Symbol string `json:"symbol" in:"path" v:"required|regex:^[A-Za-z.]{1,10}$#יש להזין סימול מניה|סימול המניה לא תקין"`
+}
+
+type FavoriteRemoveRes struct{}

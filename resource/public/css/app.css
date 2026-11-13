@@ -47,3 +47,6 @@
   vertical-align: middle;
   border-top: 2px var(--ema-dash) var(--ema-color);
 }
+
+/* Favorite star in the symbol cell of each list row. */
+.fav-btn { padding: 0; line-height: 1; text-decoration: none; color: var(--bs-warning); }

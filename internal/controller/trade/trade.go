@@ -78,7 +78,7 @@ func (c *ControllerV1) ClosePosition(ctx context.Context, req *v1.ClosePositionR
 }
 
 func (c *ControllerV1) Watchlist(ctx context.Context, req *v1.WatchlistReq) (res *v1.WatchlistRes, err error) {
-	symbols, err := trade.Watchlist(ctx)
+	symbols, err := trade.Watchlist(ctx, trade.WatchlistName)
 	if err != nil {
 		return nil, err
 	}
@@ -86,7 +86,7 @@ func (c *ControllerV1) Watchlist(ctx context.Context, req *v1.WatchlistReq) (res
 }
 
 func (c *ControllerV1) WatchlistAdd(ctx context.Context, req *v1.WatchlistAddReq) (res *v1.WatchlistAddRes, err error) {
-	symbols, err := trade.WatchlistAdd(ctx, req.Symbol)
+	symbols, err := trade.WatchlistAdd(ctx, trade.WatchlistName, req.Symbol)
 	if err != nil {
 		return nil, err
 	}
@@ -94,5 +94,22 @@ func (c *ControllerV1) WatchlistAdd(ctx context.Context, req *v1.WatchlistAddReq
 }
 
 func (c *ControllerV1) WatchlistRemove(ctx context.Context, req *v1.WatchlistRemoveReq) (res *v1.WatchlistRemoveRes, err error) {
-	return &v1.WatchlistRemoveRes{}, trade.WatchlistRemove(ctx, req.Symbol)
+	return &v1.WatchlistRemoveRes{}, trade.WatchlistRemove(ctx, trade.WatchlistName, req.Symbol)
+}
+
+func (c *ControllerV1) Favorites(ctx context.Context, req *v1.FavoritesReq) (res *v1.FavoritesRes, err error) {
+	symbols, err := trade.Watchlist(ctx, trade.FavoritesName)
+	if err != nil {
+		return nil, err
+	}
+	return &v1.FavoritesRes{Symbols: symbols}, nil
+}
+
+func (c *ControllerV1) FavoriteAdd(ctx context.Context, req *v1.FavoriteAddReq) (res *v1.FavoriteAddRes, err error) {
+	_, err = trade.WatchlistAdd(ctx, trade.FavoritesName, req.Symbol)
+	return &v1.FavoriteAddRes{}, err
+}
+
+func (c *ControllerV1) FavoriteRemove(ctx context.Context, req *v1.FavoriteRemoveReq) (res *v1.FavoriteRemoveRes, err error) {
+	return &v1.FavoriteRemoveRes{}, trade.WatchlistRemove(ctx, trade.FavoritesName, req.Symbol)
 }

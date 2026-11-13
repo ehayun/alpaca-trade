@@ -129,3 +129,60 @@ export function cell(text, { ltr = false, cls = '' } = {}) {
   }
   return td;
 }
+
+// Favorites: a star on each symbol row of each list. The symbols are kept in an Alpaca watchlist.
+const favorites = new Set();
+const favError = (err) => showMessage(document.getElementById('trade-msg'), err.message);
+
+function paintStar(btn) {
+  const on = favorites.has(btn.dataset.fav);
+  btn.textContent = on ? '★' : '☆';
+  btn.setAttribute('aria-pressed', on);
+}
+
+// paintStars updates the stars of one symbol in all lists (all symbols when there is no argument).
+function paintStars(symbol) {
+  document.querySelectorAll('.fav-btn').forEach((btn) => {
+    if (!symbol || btn.dataset.fav === symbol) paintStar(btn);
+  });
+}
+
+// Rows made before this answer show an empty star; paintStars corrects them.
+api('/api/favorites').then(({ symbols }) => {
+  symbols.forEach((s) => favorites.add(s));
+  paintStars();
+}).catch(favError);
+
+// favStar builds the star button that marks a symbol as favorite, or removes the mark.
+function favStar(symbol) {
+  const btn = document.createElement('button');
+  btn.type = 'button';
+  btn.className = 'btn btn-link fav-btn';
+  btn.dataset.fav = symbol;
+  btn.setAttribute('aria-label', `מועדף: ${symbol}`);
+  paintStar(btn);
+  btn.addEventListener('click', async (e) => {
+    e.stopPropagation(); // mark only, do not open the symbol
+    const on = favorites.has(symbol);
+    btn.disabled = true;
+    try {
+      if (on) await api(`/api/favorites/${encodeURIComponent(symbol)}`, { method: 'DELETE' });
+      else await api('/api/favorites', { method: 'POST', body: JSON.stringify({ symbol }) });
+      if (on) favorites.delete(symbol);
+      else favorites.add(symbol);
+      paintStars(symbol);
+    } catch (err) {
+      favError(err);
+    } finally {
+      btn.disabled = false;
+    }
+  });
+  return btn;
+}
+
+// symbolCell builds the symbol <td> of a list row: the favorite star, then the symbol.
+export function symbolCell(symbol, cls = '') {
+  const td = cell(symbol, { ltr: true, cls });
+  td.prepend(favStar(symbol), ' ');
+  return td;
+}
