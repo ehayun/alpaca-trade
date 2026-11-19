@@ -29,13 +29,19 @@ const (
 // the starting value's weight drops to (1-2/201)^1030 ≈ 0.003%, so values match a full-history EMA.
 const emaWarmupDays = 1500
 
-// DailyCandles returns daily candles for the last `days` calendar days, with their EMAs and MACD.
-func DailyCandles(ctx context.Context, symbol string, days int) ([]model.Candle, []model.EMA, model.MACD, error) {
+// Candles returns daily (or weekly) candles for the last `days` calendar days, with their EMAs and MACD.
+// A weekly candle is dated on the first trading day of its week.
+func Candles(ctx context.Context, symbol string, days int, weekly bool) ([]model.Candle, []model.EMA, model.MACD, error) {
 	start, end := Range(time.Now(), days)
+	tf, warmup := marketdata.OneDay, emaWarmupDays
+	if weekly {
+		// ponytail: the same bar count of warmup needs 5x the days; Alpaca has data from 2016 only, so EMA 200 is approximate.
+		tf, warmup = marketdata.OneWeek, emaWarmupDays*5
+	}
 	bars, err := client.GetBars(symbol, marketdata.GetBarsRequest{
-		TimeFrame:  marketdata.OneDay,
+		TimeFrame:  tf,
 		Adjustment: marketdata.AdjustmentSplit,
-		Start:      start.AddDate(0, 0, -emaWarmupDays),
+		Start:      start.AddDate(0, 0, -warmup),
 		End:        end,
 	})
 	if err != nil {

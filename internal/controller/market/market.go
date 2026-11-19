@@ -19,7 +19,7 @@ func NewV1() *ControllerV1 { return &ControllerV1{} }
 
 func (c *ControllerV1) Bars(ctx context.Context, req *v1.BarsReq) (res *v1.BarsRes, err error) {
 	symbol := strings.ToUpper(req.Symbol)
-	candles, emas, macd, err := market.DailyCandles(ctx, symbol, req.Days)
+	candles, emas, macd, err := market.Candles(ctx, symbol, req.Days, req.Weekly)
 	if err != nil {
 		return nil, gerror.Wrapf(err, "bars %s", symbol)
 	}

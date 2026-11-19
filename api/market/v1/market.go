@@ -7,9 +7,10 @@ import (
 )
 
 type BarsReq struct {
-	g.Meta `path:"/bars" method:"get" tags:"Market" summary:"Daily candles for the last N days"`
+	g.Meta `path:"/bars" method:"get" tags:"Market" summary:"Daily or weekly candles for the last N days"`
 	Symbol string `json:"symbol" v:"required|regex:^[A-Za-z.]{1,10}$#יש להזין סימול מניה|סימול המניה לא תקין"`
 	Days   int    `json:"days" d:"300" v:"between:1,3650#מספר הימים חייב להיות בין 1 ל-3650"`
+	Weekly bool   `json:"weekly"`
 }
 
 type BarsRes struct {

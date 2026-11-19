@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;700&display=swap">
-  <link rel="stylesheet" href="/css/app.css?ver=v-4.4.19">
+  <link rel="stylesheet" href="/css/app.css?ver=v-4.4.20">
   <script>
     // Follow the OS light/dark setting.
     if (matchMedia('(prefers-color-scheme: dark)').matches) document.documentElement.dataset.bsTheme = 'dark';
@@ -233,6 +233,14 @@
           <button type="submit" class="btn btn-primary w-100">הצג גרף</button>
         </div>
         <div class="col-12 col-md-auto ms-md-auto">
+          <div class="btn-group w-100" role="group" aria-label="טווח נר">
+            <input type="radio" class="btn-check" name="chart-tf" id="chart-tf-day" value="" checked>
+            <label class="btn btn-outline-secondary" for="chart-tf-day">יומי</label>
+            <input type="radio" class="btn-check" name="chart-tf" id="chart-tf-week" value="week">
+            <label class="btn btn-outline-secondary" for="chart-tf-week">שבועי</label>
+          </div>
+        </div>
+        <div class="col-12 col-md-auto">
           <div class="btn-group w-100" role="group" aria-label="סוג גרף">
             <input type="radio" class="btn-check" name="chart-type" id="chart-candles" value="candles" checked>
             <label class="btn btn-outline-secondary" for="chart-candles">נרות</label>
@@ -302,13 +310,13 @@
 </main>
 
 <script src="https://cdn.jsdelivr.net/npm/lightweight-charts@5.2.1/dist/lightweight-charts.standalone.production.js" integrity="sha384-KkYqTZlM13Zya6fVUF3IGCBOQ1ehFeJVVgxaVvD/0MebineF9EI8Jkd3NnWNChqN" crossorigin="anonymous"></script>
-<script type="module" src="/js/chart.js?ver=v-4.4.19"></script>
-<script type="module" src="/js/closed.js?ver=v-4.4.19"></script>
-<script type="module" src="/js/all.js?ver=v-4.4.19"></script>
-<script type="module" src="/js/watch.js?ver=v-4.4.19"></script>
-<script type="module" src="/js/fav.js?ver=v-4.4.19"></script>
-<script type="module" src="/js/trade.js?ver=v-4.4.19"></script>
-<script type="module" src="/js/info.js?ver=v-4.4.19"></script>
-<script type="module" src="/js/scanner.js?ver=v-4.4.19"></script>
+<script type="module" src="/js/chart.js?ver=v-4.4.20"></script>
+<script type="module" src="/js/closed.js?ver=v-4.4.20"></script>
+<script type="module" src="/js/all.js?ver=v-4.4.20"></script>
+<script type="module" src="/js/watch.js?ver=v-4.4.20"></script>
+<script type="module" src="/js/fav.js?ver=v-4.4.20"></script>
+<script type="module" src="/js/trade.js?ver=v-4.4.20"></script>
+<script type="module" src="/js/info.js?ver=v-4.4.20"></script>
+<script type="module" src="/js/scanner.js?ver=v-4.4.20"></script>
 </body>
 </html>

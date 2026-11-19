@@ -10,7 +10,8 @@ const LABEL = { buy: 'קנייה', sell: 'מכירה' };
 let series = null; // the price series; chart.js replaces it on redraw
 let markers = null; // markers plugin of that series
 let lines = []; // price lines on that series
-let times = new Set(); // candle days; a marker must sit on one
+let times = []; // candle days, sorted; a marker must sit on one
+let weekly = false;
 let symbol = '';
 let days = 0;
 let fills = [];
@@ -18,10 +19,17 @@ let positions = [];
 let orders = [];
 let positionColor = '#495057';
 
+// candleDay is the candle a fill day sits on: the same day, or on a weekly chart the week's candle
+// (the last candle on or before that day). Undefined when there is none.
+function candleDay(day) {
+  if (!weekly) return times.includes(day) ? day : undefined;
+  return times.findLast((t) => t <= day);
+}
+
 function render() {
   if (!series) return;
-  markers.setMarkers(fills.filter((f) => times.has(f.day)).map((f) => ({
-    time: f.day,
+  markers.setMarkers(fills.map((f) => ({ ...f, time: candleDay(f.day) })).filter((f) => f.time).map((f) => ({
+    time: f.time,
     position: f.side === 'buy' ? 'belowBar' : 'aboveBar',
     shape: f.side === 'buy' ? 'arrowUp' : 'arrowDown',
     color: f.side === 'buy' ? BUY : SELL,
@@ -74,14 +82,15 @@ export function initTrades(chart, dark) {
   });
 }
 
-// setTradesSeries is called after each redraw with the new price series and its candle days.
-export function setTradesSeries(s, candles) {
+// setTradesSeries is called after each redraw with the new price series, its candles and their time frame.
+export function setTradesSeries(s, candles, wk) {
   if (s !== series) {
     series = s;
     markers = LWC.createSeriesMarkers(s, []);
     lines = []; // the old lines went away with the old series
   }
-  times = new Set(candles.map((c) => c.time));
+  times = candles.map((c) => c.time);
+  weekly = wk;
   render();
 }
 

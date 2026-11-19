@@ -1,4 +1,4 @@
-// Price chart: daily candles (default), bars or close-price line, with EMA 20/100/200,
+// Price chart: daily (default) or weekly; candles (default), bars or close-price line, with EMA 20/100/200,
 // and MACD (12, 26, 9) in a pane below, from /api/bars.
 import { api, showMessage, hideMessage } from './common.js';
 import { initTrades, setTradesSeries, loadTrades } from './chart-trades.js';
@@ -9,6 +9,8 @@ const msg = document.getElementById('bars-msg');
 const title = document.getElementById('chart-title');
 const box = document.getElementById('chart');
 const toggles = document.querySelectorAll('[name=chart-type]');
+const tfToggles = document.querySelectorAll('[name=chart-tf]');
+const weekly = () => document.querySelector('[name=chart-tf]:checked').value === 'week';
 
 const dark = matchMedia('(prefers-color-scheme: dark)').matches;
 const chart = LWC.createChart(box, {
@@ -30,6 +32,7 @@ const chart = LWC.createChart(box, {
 initTrades(chart, dark);
 
 let candles = [];
+let candlesWeekly = false; // what the loaded candles are, not what the toggle shows now
 let series = null; // the price series; the only one replaced on redraw
 
 const MACD_PANE = 1;
@@ -110,23 +113,25 @@ function draw() {
     });
     series.setData(candles);
   }
-  setTradesSeries(series, candles);
+  setTradesSeries(series, candles, candlesWeekly);
   // Show all candles plus an empty margin after the last one (5% of the range, at least 2 bars).
   const n = candles.length;
   chart.timeScale().setVisibleLogicalRange({ from: -0.5, to: n - 0.5 + Math.max(2, Math.round(n * 0.05)) });
 }
 
 async function load(symbol, days) {
+  const wk = weekly();
   hideMessage(msg);
   form.querySelector('button').disabled = true;
   try {
-    const data = await api(`/api/bars?symbol=${encodeURIComponent(symbol)}&days=${encodeURIComponent(days)}`);
+    const data = await api(`/api/bars?symbol=${encodeURIComponent(symbol)}&days=${encodeURIComponent(days)}${wk ? '&weekly=true' : ''}`);
     candles = data.candles;
+    candlesWeekly = wk;
     loadTrades(data.symbol, days);
     setIndicators(data);
     const sym = document.createElement('bdi');
     sym.textContent = data.symbol;
-    title.replaceChildren(sym, ` · ${days} ימים · ${candles.length} ימי מסחר`);
+    title.replaceChildren(sym, ` · ${days} ימים · ${candles.length} ${wk ? 'שבועות מסחר' : 'ימי מסחר'}`);
     draw();
     document.dispatchEvent(new CustomEvent('symbol-loaded', { detail: data.symbol }));
   } catch (err) {
@@ -136,18 +141,25 @@ async function load(symbol, days) {
   }
 }
 
+function submit() {
+  const symbol = form.symbol.value.trim().toUpperCase();
+  history.replaceState(null, '', `?symbol=${encodeURIComponent(symbol)}&days=${encodeURIComponent(form.days.value)}${weekly() ? '&tf=week' : ''}`);
+  load(symbol, form.days.value);
+}
+
 form.addEventListener('submit', (e) => {
   e.preventDefault();
-  const symbol = form.symbol.value.trim().toUpperCase();
-  history.replaceState(null, '', `?symbol=${encodeURIComponent(symbol)}&days=${encodeURIComponent(form.days.value)}`);
-  load(symbol, form.days.value);
+  submit();
 });
+// Weekly candles come from the server, so a switch reloads the chart.
+tfToggles.forEach((t) => t.addEventListener('change', () => form.symbol.value.trim() && submit()));
 toggles.forEach((t) => t.addEventListener('change', () => candles.length && draw()));
 
-// Shareable links: ?symbol=AAPL&days=90&chart=bars loads the chart on open.
+// Shareable links: ?symbol=AAPL&days=90&chart=bars&tf=week loads the chart on open.
 const params = new URLSearchParams(location.search);
 const typeInput = document.querySelector(`[name=chart-type][value="${CSS.escape(params.get('chart') || '')}"]`);
 if (typeInput) typeInput.checked = true;
+if (params.get('tf') === 'week') document.getElementById('chart-tf-week').checked = true;
 if (params.get('symbol')) {
   form.symbol.value = params.get('symbol').toUpperCase();
   if (params.get('days')) form.days.value = params.get('days');
